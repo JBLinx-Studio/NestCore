@@ -14,7 +14,11 @@ import {
   MessageSquare
 } from "lucide-react";
 
-export const DashboardOverview = () => {
+interface DashboardOverviewProps {
+  setActiveTab?: (tab: string) => void;
+}
+
+export const DashboardOverview = ({ setActiveTab }: DashboardOverviewProps) => {
   const stats = [
     {
       title: "Total Properties",
@@ -154,23 +158,42 @@ export const DashboardOverview = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Button className="w-full justify-start" variant="outline">
+            <Button 
+              className="w-full justify-start" 
+              variant="outline"
+              onClick={() => setActiveTab?.("documents")}
+            >
               <FileText className="mr-2 h-4 w-4" />
               Generate Monthly Reports
             </Button>
-            <Button className="w-full justify-start" variant="outline">
+            <Button 
+              className="w-full justify-start" 
+              variant="outline"
+              onClick={() => setActiveTab?.("tenants")}
+            >
               <Users className="mr-2 h-4 w-4" />
               Send Rent Reminders
             </Button>
-            <Button className="w-full justify-start" variant="outline">
+            <Button 
+              className="w-full justify-start" 
+              variant="outline"
+              onClick={() => setActiveTab?.("properties")}
+            >
               <Building className="mr-2 h-4 w-4" />
               Add New Property
             </Button>
-            <Button className="w-full justify-start" variant="outline">
+            <Button 
+              className="w-full justify-start" 
+              variant="outline"
+              onClick={() => setActiveTab?.("properties")}
+            >
               <Calendar className="mr-2 h-4 w-4" />
               Schedule Maintenance
             </Button>
-            <Button className="w-full justify-start bg-blue-600 hover:bg-blue-700 text-white">
+            <Button 
+              className="w-full justify-start bg-blue-600 hover:bg-blue-700 text-white"
+              onClick={() => setActiveTab?.("ai-assistant")}
+            >
               <MessageSquare className="mr-2 h-4 w-4" />
               Ask AI Assistant
             </Button>
