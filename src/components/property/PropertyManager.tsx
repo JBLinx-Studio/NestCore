@@ -1,79 +1,85 @@
 
 import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
-  Building, 
-  Search,
-  Plus,
-  Filter,
-  Grid3X3,
-  List
+  Plus, 
+  Search, 
+  Filter, 
+  Grid3X3, 
+  List,
+  Building,
+  MapPin,
+  TrendingUp,
+  Users,
+  DollarSign,
+  Calendar,
+  Download,
+  Upload
 } from "lucide-react";
-import { PropertyCard } from "./PropertyCard";
 import { PropertyForm } from "./PropertyForm";
+import { PropertyCard } from "./PropertyCard";
 import { toast } from "sonner";
 
 export const PropertyManager = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [showForm, setShowForm] = useState(false);
-  const [editingProperty, setEditingProperty] = useState(null);
-  const [statusFilter, setStatusFilter] = useState("all");
-
   const [properties, setProperties] = useState([
     {
       id: 1,
       name: "Sunnydale Apartments",
-      address: "123 Main Street, Port Elizabeth",
-      description: "Modern 2-bedroom apartments with sea views, parking, and 24/7 security. Perfect for young professionals and families.",
-      units: 4,
-      occupiedUnits: 3,
-      monthlyRent: "2800",
+      address: "123 Sunshine Ave, Gqeberha",
+      description: "Modern apartments with great amenities including swimming pool, gym, and 24/7 security.",
+      units: 24,
+      occupiedUnits: 20,
+      monthlyRent: "3500",
       status: "active",
       propertyType: "apartment",
       municipality: "Nelson Mandela Municipality",
-      images: [
-        { id: 1, url: "/placeholder.svg", name: "main.jpg" },
-        { id: 2, url: "/placeholder.svg", name: "kitchen.jpg" }
-      ],
+      images: [],
       createdAt: "2024-01-15",
-      updatedAt: "2024-02-15"
-    },
-    {
-      id: 2,
-      name: "Garden View Flats",
-      address: "456 Oak Avenue, Summerstrand",
-      description: "Spacious flats with garden access, close to beach and shopping centers.",
-      units: 6,
-      occupiedUnits: 6,
-      monthlyRent: "2100",
-      status: "active",
-      propertyType: "apartment",
-      municipality: "Nelson Mandela Municipality",
-      images: [
-        { id: 3, url: "/placeholder.svg", name: "exterior.jpg" }
-      ],
-      createdAt: "2024-01-10",
       updatedAt: "2024-01-20"
     },
     {
-      id: 3,
-      name: "Beachfront Residence",
-      address: "789 Coastal Road, Humewood",
-      description: "Luxury beachfront property with stunning ocean views.",
-      units: 2,
-      occupiedUnits: 0,
-      monthlyRent: "3500",
-      status: "vacant",
-      propertyType: "house",
+      id: 2,
+      name: "Ocean View Townhouses",
+      address: "456 Coastal Road, Summerstrand",
+      description: "Beautiful oceanfront townhouses with private gardens and stunning sea views.",
+      units: 12,
+      occupiedUnits: 10,
+      monthlyRent: "5500",
+      status: "active",
+      propertyType: "townhouse",
       municipality: "Nelson Mandela Municipality",
       images: [],
       createdAt: "2024-02-01",
-      updatedAt: "2024-03-01"
+      updatedAt: "2024-02-05"
+    },
+    {
+      id: 3,
+      name: "Central Studios",
+      address: "789 Market Street, Central",
+      description: "Compact studio apartments perfect for students and young professionals.",
+      units: 36,
+      occupiedUnits: 25,
+      monthlyRent: "2200",
+      status: "maintenance",
+      propertyType: "studio",
+      municipality: "Nelson Mandela Municipality",
+      images: [],
+      createdAt: "2024-01-10",
+      updatedAt: "2024-01-18"
     }
   ]);
 
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingProperty, setEditingProperty] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+  // Filter properties based on search and status
   const filteredProperties = properties.filter(property => {
     const matchesSearch = property.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          property.address.toLowerCase().includes(searchTerm.toLowerCase());
@@ -81,14 +87,26 @@ export const PropertyManager = () => {
     return matchesSearch && matchesStatus;
   });
 
+  // Calculate stats
+  const totalProperties = properties.length;
+  const totalUnits = properties.reduce((sum, p) => sum + p.units, 0);
+  const totalOccupied = properties.reduce((sum, p) => sum + (p.occupiedUnits || 0), 0);
+  const totalRevenue = properties.reduce((sum, p) => sum + (parseFloat(p.monthlyRent) * (p.occupiedUnits || 0)), 0);
+  const occupancyRate = totalUnits > 0 ? Math.round((totalOccupied / totalUnits) * 100) : 0;
+
   const handleAddProperty = () => {
     setEditingProperty(null);
-    setShowForm(true);
+    setIsFormOpen(true);
   };
 
   const handleEditProperty = (property: any) => {
     setEditingProperty(property);
-    setShowForm(true);
+    setIsFormOpen(true);
+  };
+
+  const handleViewProperty = (property: any) => {
+    toast.info(`Viewing details for ${property.name}`);
+    // Future: Navigate to detailed property view
   };
 
   const handleSaveProperty = (propertyData: any) => {
@@ -97,83 +115,170 @@ export const PropertyManager = () => {
     } else {
       setProperties([...properties, propertyData]);
     }
-    setShowForm(false);
-    setEditingProperty(null);
   };
 
-  const handleViewProperty = (property: any) => {
-    toast.info(`Viewing details for ${property.name}`);
+  const handleBulkImport = () => {
+    toast.info("Bulk import feature coming soon!");
   };
 
-  const getStatusCounts = () => {
-    return {
-      total: properties.length,
-      active: properties.filter(p => p.status === 'active').length,
-      vacant: properties.filter(p => p.status === 'vacant').length,
-      maintenance: properties.filter(p => p.status === 'maintenance').length
-    };
+  const handleExportData = () => {
+    toast.info("Export feature coming soon!");
   };
-
-  const statusCounts = getStatusCounts();
 
   return (
     <div className="space-y-6">
-      {/* Header Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Property Management</h2>
-          <p className="text-gray-600">Manage and showcase all your rental properties</p>
-          <div className="flex gap-4 mt-2 text-sm">
-            <span className="text-blue-600 font-medium">{statusCounts.total} Total</span>
-            <span className="text-green-600 font-medium">{statusCounts.active} Active</span>
-            <span className="text-orange-600 font-medium">{statusCounts.vacant} Available</span>
-            <span className="text-red-600 font-medium">{statusCounts.maintenance} Maintenance</span>
-          </div>
+          <h1 className="text-2xl font-bold text-gray-900">Property Management</h1>
+          <p className="text-gray-600">Manage your rental properties and track occupancy</p>
         </div>
-        <Button onClick={handleAddProperty} className="bg-blue-600 hover:bg-blue-700">
-          <Plus className="mr-2 h-4 w-4" />
-          Add New Property
-        </Button>
-      </div>
-
-      {/* Search and Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <Input
-            placeholder="Search properties by name or address..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        
         <div className="flex gap-2">
-          <select 
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md bg-white"
-          >
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="vacant">Available</option>
-            <option value="maintenance">Maintenance</option>
-            <option value="unavailable">Unavailable</option>
-          </select>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setViewMode(viewMode === "grid" ? "list" : "grid")}
-          >
-            {viewMode === "grid" ? <List className="h-4 w-4" /> : <Grid3X3 className="h-4 w-4" />}
+          <Button variant="outline" onClick={handleBulkImport}>
+            <Upload className="h-4 w-4 mr-2" />
+            Import
+          </Button>
+          <Button variant="outline" onClick={handleExportData}>
+            <Download className="h-4 w-4 mr-2" />
+            Export
+          </Button>
+          <Button onClick={handleAddProperty} className="bg-blue-600 hover:bg-blue-700">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Property
           </Button>
         </div>
       </div>
 
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="border-blue-200 bg-blue-50">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-blue-600">Total Properties</p>
+                <p className="text-2xl font-bold text-blue-900">{totalProperties}</p>
+              </div>
+              <Building className="h-8 w-8 text-blue-600" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="border-green-200 bg-green-50">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-green-600">Total Units</p>
+                <p className="text-2xl font-bold text-green-900">{totalUnits}</p>
+              </div>
+              <MapPin className="h-8 w-8 text-green-600" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="border-yellow-200 bg-yellow-50">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-yellow-600">Occupancy Rate</p>
+                <p className="text-2xl font-bold text-yellow-900">{occupancyRate}%</p>
+              </div>
+              <TrendingUp className="h-8 w-8 text-yellow-600" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="border-purple-200 bg-purple-50">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-purple-600">Monthly Revenue</p>
+                <p className="text-2xl font-bold text-purple-900">R{totalRevenue.toLocaleString()}</p>
+              </div>
+              <DollarSign className="h-8 w-8 text-purple-600" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filters and Search */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <Search className="h-5 w-5" />
+              Search & Filter Properties
+            </span>
+            <div className="flex items-center gap-2">
+              <Button
+                variant={viewMode === 'grid' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('grid')}
+              >
+                <Grid3X3 className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('list')}
+              >
+                <List className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1">
+              <Input
+                placeholder="Search properties by name or address..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full"
+              />
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full sm:w-48">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="vacant">Vacant</SelectItem>
+                <SelectItem value="maintenance">Maintenance</SelectItem>
+                <SelectItem value="unavailable">Unavailable</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {searchTerm || statusFilter !== "all" ? (
+            <div className="mt-4 flex items-center gap-2">
+              <span className="text-sm text-gray-600">
+                Showing {filteredProperties.length} of {totalProperties} properties
+              </span>
+              {(searchTerm || statusFilter !== "all") && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setSearchTerm("");
+                    setStatusFilter("all");
+                  }}
+                >
+                  Clear filters
+                </Button>
+              )}
+            </div>
+          ) : null}
+        </CardContent>
+      </Card>
+
       {/* Properties Grid/List */}
-      {viewMode === "grid" ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      {filteredProperties.length > 0 ? (
+        <div className={
+          viewMode === 'grid' 
+            ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            : "space-y-4"
+        }>
           {filteredProperties.map((property) => (
             <PropertyCard
               key={property.id}
@@ -184,40 +289,28 @@ export const PropertyManager = () => {
           ))}
         </div>
       ) : (
-        <div className="space-y-4">
-          {filteredProperties.map((property) => (
-            <PropertyCard
-              key={property.id}
-              property={property}
-              onEdit={() => handleEditProperty(property)}
-              onView={() => handleViewProperty(property)}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Empty State */}
-      {filteredProperties.length === 0 && (
-        <div className="text-center py-12">
+        <Card className="p-12 text-center">
           <Building className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No properties found</h3>
           <p className="text-gray-600 mb-4">
-            {searchTerm ? 'Try adjusting your search terms' : 'Get started by adding your first property'}
+            {searchTerm || statusFilter !== "all" 
+              ? "Try adjusting your search criteria" 
+              : "Get started by adding your first property"
+            }
           </p>
-          <Button onClick={handleAddProperty} className="bg-blue-600 hover:bg-blue-700">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Your First Property
-          </Button>
-        </div>
+          {!searchTerm && statusFilter === "all" && (
+            <Button onClick={handleAddProperty} className="bg-blue-600 hover:bg-blue-700">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Your First Property
+            </Button>
+          )}
+        </Card>
       )}
 
       {/* Property Form Dialog */}
       <PropertyForm
-        open={showForm}
-        onClose={() => {
-          setShowForm(false);
-          setEditingProperty(null);
-        }}
+        open={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
         property={editingProperty}
         onSave={handleSaveProperty}
       />
