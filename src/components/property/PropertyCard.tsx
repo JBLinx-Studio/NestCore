@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +13,8 @@ import {
   Eye,
   Edit,
   Calendar,
-  TrendingUp
+  TrendingUp,
+  Home
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -28,9 +28,10 @@ interface PropertyCardProps {
   property: any;
   onEdit: () => void;
   onView: () => void;
+  viewMode?: 'grid' | 'list';
 }
 
-export const PropertyCard = ({ property, onEdit, onView }: PropertyCardProps) => {
+export const PropertyCard = ({ property, onEdit, onView, viewMode = 'grid' }: PropertyCardProps) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active': return 'bg-green-100 text-green-800 border-green-200';
@@ -64,8 +65,97 @@ export const PropertyCard = ({ property, onEdit, onView }: PropertyCardProps) =>
     return 'text-red-600';
   };
 
+  if (viewMode === 'list') {
+    return (
+      <Card className="hover:shadow-lg transition-all duration-200 border border-gray-200 group">
+        <CardContent className="p-6">
+          <div className="flex items-center space-x-6">
+            {/* Property Image */}
+            <div className="relative overflow-hidden rounded-lg w-24 h-24 flex-shrink-0">
+              {property.images && property.images.length > 0 ? (
+                <img 
+                  src={property.images[0].url} 
+                  alt={property.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                  <Home className="h-8 w-8 text-gray-400" />
+                </div>
+              )}
+            </div>
+
+            {/* Property Info */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                    {property.name}
+                  </h3>
+                  <div className="flex items-center text-sm text-gray-600 mt-1">
+                    <MapPin className="h-4 w-4 mr-1" />
+                    {property.address}
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    <Badge className={getStatusColor(property.status)}>
+                      {property.status.charAt(0).toUpperCase() + property.status.slice(1)}
+                    </Badge>
+                    <Badge variant="outline" className={`${getOccupancyColor()} border-current`}>
+                      {calculateOccupancyRate()}% Occupied
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* Stats */}
+                <div className="flex items-center space-x-6 text-sm">
+                  <div className="text-center">
+                    <div className="font-semibold text-gray-900">{property.units}</div>
+                    <div className="text-gray-500">Units</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-semibold text-gray-900">{property.occupiedUnits || 0}</div>
+                    <div className="text-gray-500">Occupied</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="font-semibold text-green-600">R{property.monthlyRent}</div>
+                    <div className="text-gray-500">Monthly</div>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center space-x-2">
+                  <Button variant="outline" size="sm" onClick={onView}>
+                    <Eye className="h-4 w-4 mr-1" />
+                    View
+                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={onEdit}>
+                        <Edit className="mr-2 h-4 w-4" />
+                        Edit Property
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleShare}>
+                        <Share2 className="mr-2 h-4 w-4" />
+                        Share Property
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <Card className="hover:shadow-lg transition-all duration-200 border border-gray-200 group">
+    <Card className="hover:shadow-xl transition-all duration-300 border border-gray-200 group hover:border-blue-300 bg-gradient-to-br from-white to-gray-50">
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between">
           <div className="flex-1">
@@ -81,7 +171,7 @@ export const PropertyCard = ({ property, onEdit, onView }: PropertyCardProps) =>
                 {property.status.charAt(0).toUpperCase() + property.status.slice(1)}
               </Badge>
               {property.status === 'vacant' && (
-                <Badge variant="outline" className="text-green-600 border-green-200">
+                <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">
                   Available Now
                 </Badge>
               )}
@@ -139,7 +229,7 @@ export const PropertyCard = ({ property, onEdit, onView }: PropertyCardProps) =>
             </div>
           ) : (
             <div className="w-full h-32 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center">
-              <Camera className="h-8 w-8 text-gray-400" />
+              <Home className="h-8 w-8 text-gray-400" />
             </div>
           )}
           <Button 
@@ -154,21 +244,21 @@ export const PropertyCard = ({ property, onEdit, onView }: PropertyCardProps) =>
 
         {/* Property Stats Grid */}
         <div className="grid grid-cols-3 gap-3">
-          <div className="flex items-center space-x-2 p-2 bg-blue-50 rounded-lg">
+          <div className="flex items-center space-x-2 p-2 bg-blue-50 rounded-lg border border-blue-100">
             <Building className="h-4 w-4 text-blue-600" />
             <div>
               <div className="text-sm font-medium">{property.units}</div>
               <div className="text-xs text-gray-500">Units</div>
             </div>
           </div>
-          <div className="flex items-center space-x-2 p-2 bg-green-50 rounded-lg">
+          <div className="flex items-center space-x-2 p-2 bg-green-50 rounded-lg border border-green-100">
             <Users className="h-4 w-4 text-green-600" />
             <div>
               <div className="text-sm font-medium">{property.occupiedUnits || 0}</div>
               <div className="text-xs text-gray-500">Occupied</div>
             </div>
           </div>
-          <div className="flex items-center space-x-2 p-2 bg-yellow-50 rounded-lg">
+          <div className="flex items-center space-x-2 p-2 bg-yellow-50 rounded-lg border border-yellow-100">
             <TrendingUp className="h-4 w-4 text-yellow-600" />
             <div>
               <div className="text-sm font-medium">{calculateOccupancyRate()}%</div>
@@ -178,7 +268,7 @@ export const PropertyCard = ({ property, onEdit, onView }: PropertyCardProps) =>
         </div>
 
         {/* Revenue and Details */}
-        <div className="space-y-3 p-3 bg-gray-50 rounded-lg">
+        <div className="space-y-3 p-3 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg border border-gray-100">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-gray-700 flex items-center">
               <DollarSign className="h-4 w-4 mr-1" />
@@ -204,11 +294,11 @@ export const PropertyCard = ({ property, onEdit, onView }: PropertyCardProps) =>
 
         {/* Action Buttons */}
         <div className="flex space-x-2 pt-2">
-          <Button variant="outline" size="sm" className="flex-1 hover:bg-blue-50" onClick={onView}>
+          <Button variant="outline" size="sm" className="flex-1 hover:bg-blue-50 hover:border-blue-300" onClick={onView}>
             <Eye className="h-4 w-4 mr-1" />
             View
           </Button>
-          <Button variant="outline" size="sm" className="flex-1 hover:bg-green-50" onClick={handleShare}>
+          <Button variant="outline" size="sm" className="flex-1 hover:bg-green-50 hover:border-green-300" onClick={handleShare}>
             <Share2 className="h-4 w-4 mr-1" />
             Share
           </Button>
