@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,7 +21,8 @@ import {
   Home,
   MapPin,
   Star,
-  MessageSquare
+  MessageSquare,
+  Eye
 } from "lucide-react";
 import {
   Select,
