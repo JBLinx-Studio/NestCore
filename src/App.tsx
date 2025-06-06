@@ -41,17 +41,37 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
+        <Toaster 
+          position="top-right"
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: 'white',
+              border: '1px solid #e2e8f0',
+              borderRadius: '12px',
+              boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+            },
+          }}
+        />
         <BrowserRouter>
-          <div className="min-h-screen bg-gray-50">
+          <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 w-full">
             <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
             <Sidebar open={sidebarOpen} activeTab={activeTab} setActiveTab={setActiveTab} />
             
             <main className={`transition-all duration-300 ${
               sidebarOpen ? "ml-64" : "ml-16"
-            } mt-16 p-6`}>
+            } mt-16 p-6 min-h-[calc(100vh-4rem)]`}>
               <div className="max-w-7xl mx-auto">
-                {renderActiveComponent()}
+                <Routes>
+                  <Route path="/" element={renderActiveComponent()} />
+                  <Route path="/dashboard" element={<DashboardOverview setActiveTab={setActiveTab} />} />
+                  <Route path="/properties" element={<PropertyManager />} />
+                  <Route path="/tenants" element={<TenantManager />} />
+                  <Route path="/utilities" element={<UtilityTracker />} />
+                  <Route path="/documents" element={<DocumentManager />} />
+                  <Route path="/ai-assistant" element={<AIAssistant />} />
+                  <Route path="*" element={renderActiveComponent()} />
+                </Routes>
               </div>
             </main>
           </div>
