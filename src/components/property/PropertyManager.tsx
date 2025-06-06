@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -31,10 +32,16 @@ export const PropertyManager = () => {
       occupiedUnits: 10,
       monthlyRent: 15000,
       status: "active",
-      description: "Modern apartment complex with great amenities",
+      description: "Modern apartment complex with stunning sunset views and premium amenities including 24/7 security, swimming pool, and gym facilities.",
+      propertyType: "apartment",
       images: [
-        { url: "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=400&h=300&fit=crop" }
+        { 
+          id: 1,
+          url: "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=400&h=300&fit=crop",
+          name: "main-view.jpg"
+        }
       ],
+      createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     },
     {
@@ -46,26 +53,58 @@ export const PropertyManager = () => {
       occupiedUnits: 0,
       monthlyRent: 8500,
       status: "vacant",
-      description: "Beautiful villa with ocean views",
+      description: "Luxurious beachfront villa with panoramic ocean views, private garden, and direct beach access.",
+      propertyType: "villa",
       images: [
-        { url: "https://images.unsplash.com/photo-1518005020951-eccb494ad742?w=400&h=300&fit=crop" }
+        { 
+          id: 2,
+          url: "https://images.unsplash.com/photo-1518005020951-eccb494ad742?w=400&h=300&fit=crop",
+          name: "ocean-villa.jpg"
+        }
       ],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 3,
+      name: "Green Gardens Townhouse",
+      address: "789 Garden Lane, Pretoria",
+      municipality: "Tshwane",
+      units: 8,
+      occupiedUnits: 6,
+      monthlyRent: 12000,
+      status: "active",
+      description: "Family-friendly townhouse complex with beautiful gardens, playground, and excellent schools nearby.",
+      propertyType: "townhouse",
+      images: [
+        { 
+          id: 3,
+          url: "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400&h=300&fit=crop",
+          name: "townhouse.jpg"
+        }
+      ],
+      createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     }
   ]);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [municipalityFilter, setMunicipalityFilter] = useState("all");
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showForm, setShowForm] = useState(false);
   const [editingProperty, setEditingProperty] = useState<any>(null);
 
   const filteredProperties = properties.filter(property => {
     const matchesSearch = property.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         property.address.toLowerCase().includes(searchTerm.toLowerCase());
+                         property.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         property.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || property.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesMunicipality = municipalityFilter === "all" || property.municipality === municipalityFilter;
+    return matchesSearch && matchesStatus && matchesMunicipality;
   });
+
+  const municipalities = ["all", ...Array.from(new Set(properties.map(p => p.municipality)))];
 
   const handleAddProperty = () => {
     setEditingProperty(null);
@@ -91,6 +130,7 @@ export const PropertyManager = () => {
       const newProperty = {
         ...propertyData,
         id: Date.now(),
+        createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
       setProperties([...properties, newProperty]);
@@ -101,72 +141,123 @@ export const PropertyManager = () => {
   };
 
   const handleExport = () => {
-    toast.info("Export functionality coming soon!");
+    const dataStr = JSON.stringify(properties, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    const exportFileDefaultName = `nestcore-properties-${new Date().toISOString().split('T')[0]}.json`;
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+    toast.success("Properties exported successfully!");
   };
 
   const handleImport = () => {
-    toast.info("Import functionality coming soon!");
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = (e: any) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e: any) => {
+          try {
+            const importedProperties = JSON.parse(e.target.result);
+            setProperties([...properties, ...importedProperties]);
+            toast.success(`Imported ${importedProperties.length} properties successfully!`);
+          } catch (error) {
+            toast.error("Failed to import properties. Please check the file format.");
+          }
+        };
+        reader.readAsText(file);
+      }
+    };
+    input.click();
   };
 
   return (
-    <div className="space-y-8">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-            <Home className="h-6 w-6 text-white" />
+    <div className="space-y-8 p-6">
+      {/* Enhanced Page Header */}
+      <div className="flex items-center justify-between bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-100">
+        <div className="flex items-center space-x-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
+            <Home className="h-8 w-8 text-white" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Property Management</h1>
-            <p className="text-gray-600">Manage your property portfolio with NestCore</p>
+            <h1 className="text-4xl font-bold text-gray-900 mb-1">Property Portfolio</h1>
+            <p className="text-lg text-gray-600">Manage your properties with NestCore's advanced platform</p>
           </div>
         </div>
         
         <div className="flex items-center space-x-3">
-          <Button variant="outline" onClick={handleImport}>
+          <Button 
+            variant="outline" 
+            onClick={handleImport}
+            className="bg-white hover:bg-gray-50 border-gray-300"
+          >
             <Upload className="h-4 w-4 mr-2" />
             Import
           </Button>
-          <Button variant="outline" onClick={handleExport}>
+          <Button 
+            variant="outline" 
+            onClick={handleExport}
+            className="bg-white hover:bg-gray-50 border-gray-300"
+          >
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
         </div>
       </div>
 
-      {/* Property Stats */}
+      {/* Enhanced Property Stats */}
       <PropertyStats properties={properties} />
 
-      {/* Search and Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-        <div className="flex-1 flex items-center space-x-4">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Search properties..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 border-gray-300 focus:border-blue-500"
-            />
+      {/* Enhanced Search and Filters */}
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+        <div className="flex flex-col lg:flex-row gap-6 items-center justify-between">
+          <div className="flex-1 flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4 w-full">
+            <div className="relative flex-1 max-w-md w-full">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <Input
+                placeholder="Search properties, addresses, descriptions..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-12 h-12 border-gray-300 focus:border-blue-500 rounded-xl text-lg"
+              />
+            </div>
+            
+            <div className="flex space-x-3">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-48 h-12 rounded-xl">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="vacant">Vacant</SelectItem>
+                  <SelectItem value="maintenance">Maintenance</SelectItem>
+                  <SelectItem value="unavailable">Unavailable</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={municipalityFilter} onValueChange={setMunicipalityFilter}>
+                <SelectTrigger className="w-48 h-12 rounded-xl">
+                  <SelectValue placeholder="Filter by municipality" />
+                </SelectTrigger>
+                <SelectContent>
+                  {municipalities.map((municipality) => (
+                    <SelectItem key={municipality} value={municipality}>
+                      {municipality === "all" ? "All Municipalities" : municipality}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-40">
-              <Filter className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="vacant">Vacant</SelectItem>
-              <SelectItem value="maintenance">Maintenance</SelectItem>
-              <SelectItem value="unavailable">Unavailable</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
       </div>
 
-      {/* Property Grid/List */}
+      {/* Enhanced Property Grid/List */}
       <PropertyGrid
         properties={filteredProperties}
         viewMode={viewMode}
@@ -176,12 +267,12 @@ export const PropertyManager = () => {
         onViewProperty={handleViewProperty}
       />
 
-      {/* Property Form Dialog */}
+      {/* Enhanced Property Form Dialog */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-7xl max-h-[95vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center space-x-2">
-              <Home className="h-5 w-5" />
+            <DialogTitle className="flex items-center space-x-3 text-2xl">
+              <Home className="h-6 w-6 text-blue-600" />
               <span>{editingProperty ? 'Edit Property' : 'Add New Property'}</span>
             </DialogTitle>
           </DialogHeader>
