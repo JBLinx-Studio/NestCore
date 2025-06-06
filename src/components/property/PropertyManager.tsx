@@ -185,6 +185,17 @@ export const PropertyManager = () => {
           <div>
             <h1 className="text-4xl font-bold text-gray-900 mb-1">Property Portfolio</h1>
             <p className="text-lg text-gray-600">Manage your properties with NestCore's advanced platform</p>
+            <div className="flex gap-2 mt-3">
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                {properties.length} Total Properties
+              </span>
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                {properties.filter(p => p.status === 'active').length} Active
+              </span>
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                {properties.filter(p => p.status === 'vacant').length} Vacant
+              </span>
+            </div>
           </div>
         </div>
         
