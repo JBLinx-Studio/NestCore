@@ -21,6 +21,7 @@ import { PropertyGrid } from "./PropertyGrid";
 import { PropertyActions } from "./PropertyActions";
 import { PropertyView } from "./PropertyView";
 import { toast } from "sonner";
+import { PropertyWorkflow } from "./PropertyWorkflow";
 
 export const PropertyManager = () => {
   const [properties, setProperties] = useState([
@@ -184,6 +185,28 @@ export const PropertyManager = () => {
     input.click();
   };
 
+  const handleQuickAction = (action: string, property?: any) => {
+    switch (action) {
+      case "add-property":
+        handleAddProperty();
+        break;
+      case "rent-collection":
+        toast.info("Opening rent collection dashboard...");
+        // In a real app, this would navigate to rent collection
+        break;
+      case "maintenance":
+        toast.info("Opening maintenance scheduler...");
+        // In a real app, this would navigate to maintenance
+        break;
+      case "tenant-screening":
+        toast.info("Opening tenant screening workflow...");
+        // In a real app, this would navigate to tenant screening
+        break;
+      default:
+        toast.info(`${action} workflow starting...`);
+    }
+  };
+
   return (
     <div className="space-y-8 p-6">
       {/* Enhanced Page Header */}
@@ -228,6 +251,12 @@ export const PropertyManager = () => {
           </Button>
         </div>
       </div>
+
+      {/* New Workflow Component */}
+      <PropertyWorkflow 
+        properties={properties} 
+        onQuickAction={handleQuickAction}
+      />
 
       {/* Enhanced Property Stats */}
       <PropertyStats properties={properties} />

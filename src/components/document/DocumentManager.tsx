@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,6 +28,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { DocumentWorkflow } from "./DocumentWorkflow";
 
 export const DocumentManager = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -132,6 +132,41 @@ export const DocumentManager = () => {
     };
     setDocuments([newDocument, ...documents]);
     toast.success(`Successfully uploaded: ${file.name}`);
+  };
+
+  const handleBulkUpload = (files: FileList) => {
+    Array.from(files).forEach(file => handleUpload(file));
+  };
+
+  const handleBulkAction = (action: string, documentIds: number[]) => {
+    const affectedDocs = documents.filter(doc => documentIds.includes(doc.id));
+    
+    switch (action) {
+      case 'delete':
+        setDocuments(documents.filter(doc => !documentIds.includes(doc.id)));
+        break;
+      case 'archive':
+        setDocuments(documents.map(doc => 
+          documentIds.includes(doc.id) 
+            ? { ...doc, status: 'archived' } 
+            : doc
+        ));
+        break;
+      case 'download':
+        affectedDocs.forEach(doc => {
+          const link = document.createElement('a');
+          link.href = doc.url || '#';
+          link.download = doc.name;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        });
+        break;
+      case 'share':
+        const shareText = affectedDocs.map(doc => `${doc.name} - ${doc.property}`).join('\n');
+        navigator.clipboard.writeText(shareText);
+        break;
+    }
   };
 
   const handleCreateFolder = (name: string) => {
@@ -251,6 +286,14 @@ export const DocumentManager = () => {
         </div>
         <DocumentActions onUpload={handleUpload} onCreateFolder={handleCreateFolder} />
       </div>
+
+      {/* New Workflow Component */}
+      <DocumentWorkflow 
+        documents={documents}
+        onUpload={handleBulkUpload}
+        onCreateFolder={handleCreateFolder}
+        onBulkAction={handleBulkAction}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Categories Sidebar */}
