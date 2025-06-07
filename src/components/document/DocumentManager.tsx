@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,14 +15,26 @@ import {
   Building,
   Folder,
   Image,
-  PlusCircle
+  PlusCircle,
+  Trash2,
+  Edit,
+  Share
 } from "lucide-react";
 import { DocumentActions, DocumentItemActions } from "./DocumentActions";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export const DocumentManager = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [viewingDocument, setViewingDocument] = useState<any>(null);
+  const [showDocumentView, setShowDocumentView] = useState(false);
   const [documents, setDocuments] = useState([
     {
       id: 1,
@@ -33,7 +46,8 @@ export const DocumentManager = () => {
       property: "Sunnydale Apartments",
       tenant: "Sarah Johnson",
       status: "signed",
-      fileType: "pdf"
+      fileType: "pdf",
+      url: "#"
     },
     {
       id: 2,
@@ -45,7 +59,8 @@ export const DocumentManager = () => {
       property: "All Properties",
       tenant: "N/A",
       status: "processed",
-      fileType: "pdf"
+      fileType: "pdf",
+      url: "#"
     },
     {
       id: 3,
@@ -57,7 +72,8 @@ export const DocumentManager = () => {
       property: "Garden View Flats",
       tenant: "N/A", 
       status: "active",
-      fileType: "pdf"
+      fileType: "pdf",
+      url: "#"
     },
     {
       id: 4,
@@ -69,7 +85,8 @@ export const DocumentManager = () => {
       property: "City Center Studios",
       tenant: "N/A",
       status: "approved",
-      fileType: "image"
+      fileType: "image",
+      url: "#"
     },
     {
       id: 5,
@@ -81,7 +98,8 @@ export const DocumentManager = () => {
       property: "Garden View Flats",
       tenant: "Michael Chen",
       status: "approved",
-      fileType: "pdf"
+      fileType: "pdf",
+      url: "#"
     },
     {
       id: 6,
@@ -93,7 +111,8 @@ export const DocumentManager = () => {
       property: "Beachfront Residence",
       tenant: "N/A",
       status: "current",
-      fileType: "images"
+      fileType: "images",
+      url: "#"
     }
   ]);
 
@@ -108,7 +127,8 @@ export const DocumentManager = () => {
       property: "All Properties",
       tenant: "N/A",
       status: "uploaded",
-      fileType: file.type.includes('image') ? 'image' : 'pdf'
+      fileType: file.type.includes('image') ? 'image' : 'pdf',
+      url: URL.createObjectURL(file)
     };
     setDocuments([newDocument, ...documents]);
     toast.success(`Successfully uploaded: ${file.name}`);
@@ -125,10 +145,38 @@ export const DocumentManager = () => {
       property: "All Properties",
       tenant: "N/A",
       status: "active",
-      fileType: "folder"
+      fileType: "folder",
+      url: "#"
     };
     setDocuments([newFolder, ...documents]);
     toast.success(`Created folder: ${name}`);
+  };
+
+  const handleViewDocument = (document: any) => {
+    setViewingDocument(document);
+    setShowDocumentView(true);
+    toast.info(`Opening ${document.name} in viewer`);
+  };
+
+  const handleDownloadDocument = (document: any) => {
+    toast.success(`Downloading ${document.name}...`);
+    // Create a temporary download link
+    const link = document.createElement('a');
+    link.href = document.url || '#';
+    link.download = document.name;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleDeleteDocument = (docId: number) => {
+    setDocuments(documents.filter(doc => doc.id !== docId));
+    toast.success("Document deleted successfully");
+  };
+
+  const handleShareDocument = (document: any) => {
+    navigator.clipboard.writeText(`Document: ${document.name} - ${document.property}`);
+    toast.success("Document details copied to clipboard!");
   };
 
   const categories = [
@@ -144,6 +192,7 @@ export const DocumentManager = () => {
       case 'pdf': return <FileText className="h-5 w-5 text-red-500" />;
       case 'image': return <Image className="h-5 w-5 text-blue-500" />;
       case 'images': return <Image className="h-5 w-5 text-blue-500" />;
+      case 'folder': return <Folder className="h-5 w-5 text-yellow-500" />;
       default: return <FileText className="h-5 w-5 text-gray-500" />;
     }
   };
@@ -156,6 +205,7 @@ export const DocumentManager = () => {
       case 'approved': return 'bg-green-100 text-green-800 border-green-200';
       case 'current': return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'pending': return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'uploaded': return 'bg-purple-100 text-purple-800 border-purple-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
@@ -171,6 +221,26 @@ export const DocumentManager = () => {
     return matchesSearch && matchesCategory;
   });
 
+  // Enhanced Document Item Actions Component
+  const EnhancedDocumentItemActions = ({ document }: { document: any }) => (
+    <div className="flex space-x-2 pt-2 border-t border-gray-100">
+      <Button variant="outline" size="sm" className="flex-1" onClick={() => handleViewDocument(document)}>
+        <Eye className="mr-2 h-3 w-3" />
+        View
+      </Button>
+      <Button variant="outline" size="sm" className="flex-1" onClick={() => handleDownloadDocument(document)}>
+        <Download className="mr-2 h-3 w-3" />
+        Download
+      </Button>
+      <Button variant="outline" size="sm" onClick={() => handleShareDocument(document)}>
+        <Share className="h-3 w-3" />
+      </Button>
+      <Button variant="outline" size="sm" onClick={() => handleDeleteDocument(document.id)}>
+        <Trash2 className="h-3 w-3 text-red-500" />
+      </Button>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -182,7 +252,6 @@ export const DocumentManager = () => {
         <DocumentActions onUpload={handleUpload} onCreateFolder={handleCreateFolder} />
       </div>
 
-      {/* Search and Categories */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Categories Sidebar */}
         <div className="lg:col-span-1">
@@ -210,25 +279,60 @@ export const DocumentManager = () => {
             </CardContent>
           </Card>
 
-          {/* Quick Upload */}
           <Card className="mt-4">
             <CardHeader>
               <CardTitle className="text-base">Quick Upload</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button variant="outline" size="sm" className="w-full justify-start">
+              <Button variant="outline" size="sm" className="w-full justify-start" onClick={() => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.pdf';
+                input.onchange = (e: any) => {
+                  const file = e.target.files[0];
+                  if (file) handleUpload(file);
+                };
+                input.click();
+              }}>
                 <FileText className="mr-2 h-4 w-4" />
                 Lease Agreement
               </Button>
-              <Button variant="outline" size="sm" className="w-full justify-start">
+              <Button variant="outline" size="sm" className="w-full justify-start" onClick={() => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = 'image/*';
+                input.multiple = true;
+                input.onchange = (e: any) => {
+                  Array.from(e.target.files).forEach((file: any) => handleUpload(file));
+                };
+                input.click();
+              }}>
                 <Image className="mr-2 h-4 w-4" />
                 Property Photos
               </Button>
-              <Button variant="outline" size="sm" className="w-full justify-start">
+              <Button variant="outline" size="sm" className="w-full justify-start" onClick={() => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.pdf';
+                input.onchange = (e: any) => {
+                  const file = e.target.files[0];
+                  if (file) handleUpload(file);
+                };
+                input.click();
+              }}>
                 <FileText className="mr-2 h-4 w-4" />
                 Utility Bill
               </Button>
-              <Button variant="outline" size="sm" className="w-full justify-start">
+              <Button variant="outline" size="sm" className="w-full justify-start" onClick={() => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.pdf,.jpg,.jpeg,.png';
+                input.onchange = (e: any) => {
+                  const file = e.target.files[0];
+                  if (file) handleUpload(file);
+                };
+                input.click();
+              }}>
                 <FileText className="mr-2 h-4 w-4" />
                 Expense Receipt
               </Button>
@@ -236,7 +340,6 @@ export const DocumentManager = () => {
           </Card>
         </div>
 
-        {/* Main Content */}
         <div className="lg:col-span-3 space-y-4">
           {/* Search Bar */}
           <div className="relative">
@@ -249,7 +352,6 @@ export const DocumentManager = () => {
             />
           </div>
 
-          {/* Document Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filteredDocuments.map((doc) => (
               <Card key={doc.id} className="hover:shadow-md transition-shadow duration-200">
@@ -273,7 +375,6 @@ export const DocumentManager = () => {
                 </CardHeader>
 
                 <CardContent className="space-y-3">
-                  {/* Property and Tenant Info */}
                   <div className="space-y-2">
                     <div className="flex items-center text-sm text-gray-600">
                       <Building className="h-4 w-4 mr-2" />
@@ -291,8 +392,7 @@ export const DocumentManager = () => {
                     </div>
                   </div>
 
-                  {/* Enhanced Action Buttons */}
-                  <DocumentItemActions document={doc} />
+                  <EnhancedDocumentItemActions document={doc} />
                 </CardContent>
               </Card>
             ))}
@@ -306,7 +406,15 @@ export const DocumentManager = () => {
               <p className="text-gray-600 mb-4">
                 {searchTerm ? 'Try adjusting your search terms' : 'Upload your first document to get started'}
               </p>
-              <Button className="bg-blue-600 hover:bg-blue-700">
+              <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.multiple = true;
+                input.onchange = (e: any) => {
+                  Array.from(e.target.files).forEach((file: any) => handleUpload(file));
+                };
+                input.click();
+              }}>
                 <Upload className="mr-2 h-4 w-4" />
                 Upload Document
               </Button>
@@ -314,6 +422,60 @@ export const DocumentManager = () => {
           )}
         </div>
       </div>
+
+      {/* Document Viewer Dialog */}
+      <Dialog open={showDocumentView} onOpenChange={setShowDocumentView}>
+        <DialogContent className="max-w-4xl max-h-[95vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              {viewingDocument && getFileIcon(viewingDocument.fileType)}
+              <span>{viewingDocument?.name}</span>
+            </DialogTitle>
+            <DialogDescription>
+              {viewingDocument?.category} • {viewingDocument?.size} • {viewingDocument?.property}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex-1 bg-gray-100 rounded-lg p-8 text-center">
+            {viewingDocument?.fileType === 'image' || viewingDocument?.fileType === 'images' ? (
+              <div>
+                <Image className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+                <p className="text-gray-600">Image viewer would display here</p>
+              </div>
+            ) : (
+              <div>
+                <FileText className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+                <p className="text-gray-600">PDF viewer would display here</p>
+                <p className="text-sm text-gray-500 mt-2">
+                  In a production app, this would show the actual document content
+                </p>
+              </div>
+            )}
+          </div>
+          
+          <div className="flex justify-between items-center pt-4 border-t">
+            <div className="flex space-x-2">
+              <Button variant="outline" onClick={() => viewingDocument && handleDownloadDocument(viewingDocument)}>
+                <Download className="h-4 w-4 mr-2" />
+                Download
+              </Button>
+              <Button variant="outline" onClick={() => viewingDocument && handleShareDocument(viewingDocument)}>
+                <Share className="h-4 w-4 mr-2" />
+                Share
+              </Button>
+            </div>
+            <Button variant="destructive" onClick={() => {
+              if (viewingDocument) {
+                handleDeleteDocument(viewingDocument.id);
+                setShowDocumentView(false);
+              }
+            }}>
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

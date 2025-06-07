@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -20,6 +19,7 @@ import { PropertyForm } from "./PropertyForm";
 import { PropertyStats } from "./PropertyStats";
 import { PropertyGrid } from "./PropertyGrid";
 import { PropertyActions } from "./PropertyActions";
+import { PropertyView } from "./PropertyView";
 import { toast } from "sonner";
 
 export const PropertyManager = () => {
@@ -95,6 +95,8 @@ export const PropertyManager = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showForm, setShowForm] = useState(false);
   const [editingProperty, setEditingProperty] = useState<any>(null);
+  const [viewingProperty, setViewingProperty] = useState<any>(null);
+  const [showPropertyView, setShowPropertyView] = useState(false);
 
   const filteredProperties = properties.filter(property => {
     const matchesSearch = property.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -118,7 +120,9 @@ export const PropertyManager = () => {
   };
 
   const handleViewProperty = (property: any) => {
-    toast.info(`Viewing ${property.name} - Full property details coming soon!`);
+    setViewingProperty(property);
+    setShowPropertyView(true);
+    toast.success(`Opening detailed view for ${property.name}`);
   };
 
   const handleDeleteProperty = (property: any) => {
@@ -302,6 +306,17 @@ export const PropertyManager = () => {
           />
         </DialogContent>
       </Dialog>
+
+      {/* Property View Dialog */}
+      <PropertyView
+        property={viewingProperty}
+        isOpen={showPropertyView}
+        onClose={() => setShowPropertyView(false)}
+        onEdit={() => {
+          setShowPropertyView(false);
+          handleEditProperty(viewingProperty);
+        }}
+      />
     </div>
   );
 };

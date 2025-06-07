@@ -22,7 +22,9 @@ import {
   MapPin,
   Star,
   MessageSquare,
-  Eye
+  Eye,
+  Edit,
+  Trash2
 } from "lucide-react";
 import {
   Select,
@@ -31,13 +33,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 export const TenantManager = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [viewingUser, setViewingUser] = useState<any>(null);
+  const [showUserView, setShowUserView] = useState(false);
 
-  const tenants = [
+  const [tenants, setTenants] = useState([
     {
       id: 1,
       name: "Sarah Johnson",
@@ -131,7 +143,38 @@ export const TenantManager = () => {
       verified: true,
       specialization: "Property Law"
     }
-  ];
+  ]);
+
+  const handleViewProfile = (user: any) => {
+    setViewingUser(user);
+    setShowUserView(true);
+    toast.success(`Opening profile for ${user.name}`);
+  };
+
+  const handleSendMessage = (user: any) => {
+    toast.success(`Opening message composer for ${user.name}`);
+    // In a real app, this would open a messaging interface
+  };
+
+  const handleSendReminder = (user: any) => {
+    toast.success(`Payment reminder sent to ${user.name}`);
+    // In a real app, this would send an actual reminder
+  };
+
+  const handleCall = (user: any) => {
+    toast.info(`Calling ${user.phone}...`);
+    // In a real app, this could integrate with a calling service
+  };
+
+  const handleEmail = (user: any) => {
+    toast.info(`Opening email to ${user.email}`);
+    window.open(`mailto:${user.email}`, '_blank');
+  };
+
+  const handleDeleteUser = (userId: number) => {
+    setTenants(tenants.filter(t => t.id !== userId));
+    toast.success("User removed successfully");
+  };
 
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -252,7 +295,7 @@ export const TenantManager = () => {
             <div className="flex items-center space-x-2">
               <Home className="h-5 w-5 text-blue-600" />
               <div>
-                <div className="text-2xl font-bold text-blue-800">2</div>
+                <div className="text-2xl font-bold text-blue-800">{tenants.filter(t => t.type === 'tenant').length}</div>
                 <div className="text-sm text-blue-600">Active Tenants</div>
               </div>
             </div>
@@ -263,7 +306,7 @@ export const TenantManager = () => {
             <div className="flex items-center space-x-2">
               <UserCheck className="h-5 w-5 text-purple-600" />
               <div>
-                <div className="text-2xl font-bold text-purple-800">1</div>
+                <div className="text-2xl font-bold text-purple-800">{tenants.filter(t => t.type === 'agent').length}</div>
                 <div className="text-sm text-purple-600">Real Estate Agents</div>
               </div>
             </div>
@@ -274,7 +317,7 @@ export const TenantManager = () => {
             <div className="flex items-center space-x-2">
               <span className="text-orange-600 font-bold text-lg">🔧</span>
               <div>
-                <div className="text-2xl font-bold text-orange-800">1</div>
+                <div className="text-2xl font-bold text-orange-800">{tenants.filter(t => t.type === 'contractor').length}</div>
                 <div className="text-sm text-orange-600">Contractors</div>
               </div>
             </div>
@@ -285,7 +328,7 @@ export const TenantManager = () => {
             <div className="flex items-center space-x-2">
               <span className="text-red-600 font-bold text-lg">⚖️</span>
               <div>
-                <div className="text-2xl font-bold text-red-800">1</div>
+                <div className="text-2xl font-bold text-red-800">{tenants.filter(t => t.type === 'lawyer').length}</div>
                 <div className="text-sm text-red-600">Legal Professionals</div>
               </div>
             </div>
@@ -296,7 +339,7 @@ export const TenantManager = () => {
             <div className="flex items-center space-x-2">
               <Shield className="h-5 w-5 text-green-600" />
               <div>
-                <div className="text-2xl font-bold text-green-800">5</div>
+                <div className="text-2xl font-bold text-green-800">{tenants.filter(t => t.verified).length}</div>
                 <div className="text-sm text-green-600">Verified Users</div>
               </div>
             </div>
@@ -353,10 +396,16 @@ export const TenantManager = () => {
                 <div className="flex items-center space-x-2 text-sm">
                   <Mail className="h-4 w-4 text-gray-400" />
                   <span className="text-gray-600">{user.email}</span>
+                  <Button variant="ghost" size="sm" onClick={() => handleEmail(user)}>
+                    <Mail className="h-3 w-3" />
+                  </Button>
                 </div>
                 <div className="flex items-center space-x-2 text-sm">
                   <Phone className="h-4 w-4 text-gray-400" />
                   <span className="text-gray-600">{user.phone}</span>
+                  <Button variant="ghost" size="sm" onClick={() => handleCall(user)}>
+                    <Phone className="h-3 w-3" />
+                  </Button>
                 </div>
                 {user.specialization && (
                   <div className="flex items-center space-x-2 text-sm">
@@ -414,19 +463,22 @@ export const TenantManager = () => {
 
               {/* Action Buttons */}
               <div className="flex space-x-2 pt-2">
-                <Button variant="outline" size="sm" className="flex-1">
+                <Button variant="outline" size="sm" className="flex-1" onClick={() => handleViewProfile(user)}>
                   <Eye className="h-4 w-4 mr-1" />
-                  View Profile
+                  View
                 </Button>
-                <Button variant="outline" size="sm" className="flex-1">
+                <Button variant="outline" size="sm" className="flex-1" onClick={() => handleSendMessage(user)}>
                   <MessageSquare className="h-4 w-4 mr-1" />
                   Message
                 </Button>
                 {user.paymentStatus === 'overdue' && (
-                  <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white">
+                  <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white" onClick={() => handleSendReminder(user)}>
                     Send Reminder
                   </Button>
                 )}
+                <Button variant="ghost" size="sm" onClick={() => handleDeleteUser(user.id)}>
+                  <Trash2 className="h-4 w-4 text-red-500" />
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -447,6 +499,71 @@ export const TenantManager = () => {
           </Button>
         </div>
       )}
+
+      {/* User Profile View Dialog */}
+      <Dialog open={showUserView} onOpenChange={setShowUserView}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-3">
+              <Avatar className="h-12 w-12">
+                <AvatarImage src={viewingUser?.avatar} alt={viewingUser?.name} />
+                <AvatarFallback className="bg-blue-100 text-blue-600">
+                  {viewingUser?.name.split(' ').map((n: string) => n[0]).join('')}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <span className="text-xl">{viewingUser?.name}</span>
+                <Badge className={getTypeColor(viewingUser?.type || '')} variant="secondary">
+                  {viewingUser?.type}
+                </Badge>
+              </div>
+            </DialogTitle>
+            <DialogDescription>
+              Detailed profile information and interaction history
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <h4 className="font-medium mb-2">Contact Information</h4>
+                <div className="space-y-1 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-4 w-4" />
+                    <span>{viewingUser?.email}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4" />
+                    <span>{viewingUser?.phone}</span>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <h4 className="font-medium mb-2">Property Details</h4>
+                <div className="space-y-1 text-sm">
+                  <div>{viewingUser?.property}</div>
+                  {viewingUser?.unit !== "N/A" && <div>Unit: {viewingUser?.unit}</div>}
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex space-x-2">
+              <Button onClick={() => handleSendMessage(viewingUser)} className="flex-1">
+                <MessageSquare className="h-4 w-4 mr-2" />
+                Send Message
+              </Button>
+              <Button variant="outline" onClick={() => handleCall(viewingUser)}>
+                <Phone className="h-4 w-4 mr-2" />
+                Call
+              </Button>
+              <Button variant="outline" onClick={() => handleEmail(viewingUser)}>
+                <Mail className="h-4 w-4 mr-2" />
+                Email
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
