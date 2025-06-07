@@ -1,6 +1,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -11,8 +12,10 @@ import {
   Zap,
   FileText,
   Star,
-  Target
+  Target,
+  MoreHorizontal
 } from "lucide-react";
+import { toast } from "sonner";
 
 export const DashboardStats = () => {
   const stats = [
@@ -76,6 +79,14 @@ export const DashboardStats = () => {
     }
   ];
 
+  const handleStatClick = (stat: any) => {
+    toast.info(`Viewing detailed ${stat.title} analytics - Drill-down reports coming soon!`);
+  };
+
+  const handleMetricClick = (metric: any) => {
+    toast.info(`Analyzing ${metric.label} - Detailed breakdown coming soon!`);
+  };
+
   return (
     <div className="space-y-6">
       {/* Main Stats Grid */}
@@ -85,7 +96,11 @@ export const DashboardStats = () => {
           const TrendIcon = stat.trend === "up" ? TrendingUp : TrendingDown;
           
           return (
-            <Card key={stat.title} className={`${stat.borderColor} hover:shadow-lg transition-all duration-200`}>
+            <Card 
+              key={stat.title} 
+              className={`${stat.borderColor} hover:shadow-lg transition-all duration-200 cursor-pointer`}
+              onClick={() => handleStatClick(stat)}
+            >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-gray-600">
                   {stat.title}
@@ -114,17 +129,26 @@ export const DashboardStats = () => {
       {/* Performance Metrics */}
       <Card className="border-gray-200">
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Star className="h-5 w-5 text-yellow-500" />
-            <span>Performance Metrics</span>
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Star className="h-5 w-5 text-yellow-500" />
+              <CardTitle>Performance Metrics</CardTitle>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => toast.info("Advanced metrics dashboard coming soon!")}>
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </div>
           <CardDescription>
             Key performance indicators for your real estate ecosystem
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {metrics.map((metric) => (
-            <div key={metric.label} className="space-y-2">
+            <div 
+              key={metric.label} 
+              className="space-y-2 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors"
+              onClick={() => handleMetricClick(metric)}
+            >
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium text-gray-700">
                   {metric.label}

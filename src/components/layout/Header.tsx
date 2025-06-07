@@ -10,6 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
 
 interface HeaderProps {
   sidebarOpen: boolean;
@@ -17,6 +18,35 @@ interface HeaderProps {
 }
 
 export const Header = ({ sidebarOpen, setSidebarOpen }: HeaderProps) => {
+  const handleNotifications = () => {
+    toast.info("7 new notifications - Payment alerts, maintenance updates, and more!");
+  };
+
+  const handleMenuAction = (action: string) => {
+    switch (action) {
+      case "settings":
+        toast.info("Settings panel coming soon - Configure your preferences!");
+        break;
+      case "users":
+        toast.info("User management interface coming soon!");
+        break;
+      case "portfolio":
+        toast.info("Portfolio overview coming soon - Detailed property analytics!");
+        break;
+      case "support":
+        toast.info("Support center coming soon - Get help when you need it!");
+        break;
+      case "resources":
+        toast.info("Industry resources coming soon - Legal docs, market data, and more!");
+        break;
+      case "logout":
+        toast.success("Logout functionality coming soon - Secure session management!");
+        break;
+      default:
+        toast.info("Feature coming soon!");
+    }
+  };
+
   return (
     <header className="bg-gradient-to-r from-slate-900 via-blue-900 to-purple-900 border-b border-gray-700 px-6 py-4 shadow-2xl">
       <div className="flex items-center justify-between">
@@ -52,14 +82,14 @@ export const Header = ({ sidebarOpen, setSidebarOpen }: HeaderProps) => {
             <div className="flex items-center space-x-2">
               <Building className="h-4 w-4 text-blue-300" />
               <div className="text-sm">
-                <div className="font-semibold">24</div>
+                <div className="font-semibold">324</div>
                 <div className="text-xs text-blue-200">Properties</div>
               </div>
             </div>
             <div className="flex items-center space-x-2">
               <Users className="h-4 w-4 text-purple-300" />
               <div className="text-sm">
-                <div className="font-semibold">583</div>
+                <div className="font-semibold">1,247</div>
                 <div className="text-xs text-purple-200">Users</div>
               </div>
             </div>
@@ -73,7 +103,12 @@ export const Header = ({ sidebarOpen, setSidebarOpen }: HeaderProps) => {
           </div>
 
           {/* Notifications */}
-          <Button variant="ghost" size="sm" className="relative text-white hover:bg-white/10">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="relative text-white hover:bg-white/10"
+            onClick={handleNotifications}
+          >
             <Bell className="h-5 w-5" />
             <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-red-500">
               7
@@ -93,27 +128,27 @@ export const Header = ({ sidebarOpen, setSidebarOpen }: HeaderProps) => {
             <DropdownMenuContent align="end" className="w-56 bg-white shadow-xl border border-gray-200">
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleMenuAction("settings")}>
                 <Settings className="mr-2 h-4 w-4" />
                 Settings & Preferences
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleMenuAction("users")}>
                 <Users className="mr-2 h-4 w-4" />
                 User Management
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleMenuAction("portfolio")}>
                 <Building className="mr-2 h-4 w-4" />
                 Property Portfolio
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleMenuAction("support")}>
                 Support Center
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleMenuAction("resources")}>
                 Industry Resources
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-red-600">
+              <DropdownMenuItem className="text-red-600" onClick={() => handleMenuAction("logout")}>
                 Log out
               </DropdownMenuItem>
             </DropdownMenuContent>

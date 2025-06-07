@@ -2,6 +2,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { 
   Bell, 
   Home, 
@@ -11,8 +12,10 @@ import {
   Calendar,
   MessageSquare,
   CheckCircle,
-  AlertTriangle
+  AlertTriangle,
+  MoreHorizontal
 } from "lucide-react";
+import { toast } from "sonner";
 
 export const ActivityFeed = () => {
   const activities = [
@@ -84,13 +87,26 @@ export const ActivityFeed = () => {
     }
   };
 
+  const handleActivityClick = (activity: any) => {
+    toast.info(`Viewing details for: ${activity.action} by ${activity.user}`);
+  };
+
+  const handleViewAll = () => {
+    toast.info("Full activity log coming soon! This will show comprehensive activity history.");
+  };
+
   return (
     <Card className="border-gray-200">
       <CardHeader>
-        <CardTitle className="flex items-center space-x-2">
-          <Bell className="h-5 w-5 text-blue-600" />
-          <span>Recent Activity</span>
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Bell className="h-5 w-5 text-blue-600" />
+            <CardTitle>Recent Activity</CardTitle>
+          </div>
+          <Button variant="ghost" size="sm" onClick={handleViewAll}>
+            View All
+          </Button>
+        </div>
         <CardDescription>
           Stay updated with the latest activities across your ecosystem
         </CardDescription>
@@ -100,7 +116,11 @@ export const ActivityFeed = () => {
           {activities.map((activity) => {
             const Icon = activity.icon;
             return (
-              <div key={activity.id} className="flex items-start space-x-4 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+              <div 
+                key={activity.id} 
+                className="flex items-start space-x-4 p-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                onClick={() => handleActivityClick(activity)}
+              >
                 <div className={`w-10 h-10 ${activity.bgColor} rounded-full flex items-center justify-center flex-shrink-0`}>
                   <Icon className={`h-5 w-5 ${activity.color}`} />
                 </div>
@@ -109,9 +129,14 @@ export const ActivityFeed = () => {
                     <p className="text-sm font-medium text-gray-900">
                       {activity.user}
                     </p>
-                    <Badge className={getTypeColor(activity.type)}>
-                      {activity.type}
-                    </Badge>
+                    <div className="flex items-center space-x-2">
+                      <Badge className={getTypeColor(activity.type)}>
+                        {activity.type}
+                      </Badge>
+                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                   <p className="text-sm text-gray-600 mt-1">
                     {activity.action}

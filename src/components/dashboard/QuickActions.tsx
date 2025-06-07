@@ -13,6 +13,7 @@ import {
   TrendingUp,
   Download
 } from "lucide-react";
+import { toast } from "sonner";
 
 interface QuickActionsProps {
   setActiveTab: (tab: string) => void;
@@ -25,42 +26,58 @@ export const QuickActions = ({ setActiveTab }: QuickActionsProps) => {
       description: "List a new property",
       icon: Home,
       color: "from-blue-500 to-blue-600",
-      action: () => setActiveTab("properties")
+      action: () => {
+        setActiveTab("properties");
+        toast.success("Navigating to Properties - Add your first property!");
+      }
     },
     {
       title: "Add User",
       description: "Invite new professionals",
       icon: Users,
       color: "from-green-500 to-green-600",
-      action: () => setActiveTab("tenants")
+      action: () => {
+        setActiveTab("tenants");
+        toast.success("Navigating to Users Hub - Invite industry professionals!");
+      }
     },
     {
       title: "Schedule Meeting",
       description: "Book consultation",
       icon: Calendar,
       color: "from-purple-500 to-purple-600",
-      action: () => console.log("Schedule meeting")
+      action: () => {
+        toast.info("Meeting scheduler coming soon! This will integrate with your calendar.");
+      }
     },
     {
       title: "Generate Report",
       description: "Create analytics report",
       icon: TrendingUp,
       color: "from-orange-500 to-orange-600",
-      action: () => console.log("Generate report")
+      action: () => {
+        toast.info("Report generation coming soon! This will create detailed analytics.");
+      }
     },
     {
       title: "Upload Documents",
       description: "Add legal documents",
       icon: Upload,
       color: "from-indigo-500 to-indigo-600",
-      action: () => setActiveTab("documents")
+      action: () => {
+        setActiveTab("documents");
+        toast.success("Navigating to Documents - Upload your legal files!");
+      }
     },
     {
       title: "AI Assistant",
       description: "Get smart insights",
       icon: MessageSquare,
       color: "from-pink-500 to-pink-600",
-      action: () => setActiveTab("ai-assistant")
+      action: () => {
+        setActiveTab("ai-assistant");
+        toast.success("Opening AI Assistant - Get intelligent property insights!");
+      }
     }
   ];
 
