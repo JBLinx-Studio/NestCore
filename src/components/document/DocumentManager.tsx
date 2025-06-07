@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,12 +16,13 @@ import {
   Image,
   PlusCircle
 } from "lucide-react";
+import { DocumentActions, DocumentItemActions } from "./DocumentActions";
+import { toast } from "sonner";
 
 export const DocumentManager = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
-
-  const documents = [
+  const [documents, setDocuments] = useState([
     {
       id: 1,
       name: "Lease Agreement - Sarah Johnson",
@@ -95,7 +95,41 @@ export const DocumentManager = () => {
       status: "current",
       fileType: "images"
     }
-  ];
+  ]);
+
+  const handleUpload = (file: File) => {
+    const newDocument = {
+      id: Date.now(),
+      name: file.name,
+      type: "document",
+      category: "Legal",
+      size: `${(file.size / 1024 / 1024).toFixed(1)} MB`,
+      uploadDate: new Date().toISOString().split('T')[0],
+      property: "All Properties",
+      tenant: "N/A",
+      status: "uploaded",
+      fileType: file.type.includes('image') ? 'image' : 'pdf'
+    };
+    setDocuments([newDocument, ...documents]);
+    toast.success(`Successfully uploaded: ${file.name}`);
+  };
+
+  const handleCreateFolder = (name: string) => {
+    const newFolder = {
+      id: Date.now(),
+      name: name,
+      type: "folder",
+      category: "Organization",
+      size: "0 KB",
+      uploadDate: new Date().toISOString().split('T')[0],
+      property: "All Properties",
+      tenant: "N/A",
+      status: "active",
+      fileType: "folder"
+    };
+    setDocuments([newFolder, ...documents]);
+    toast.success(`Created folder: ${name}`);
+  };
 
   const categories = [
     { id: "all", name: "All Documents", count: documents.length },
@@ -145,16 +179,7 @@ export const DocumentManager = () => {
           <h2 className="text-2xl font-bold text-gray-900">Document Manager</h2>
           <p className="text-gray-600">Organize and manage all your property-related documents</p>
         </div>
-        <div className="flex space-x-2">
-          <Button className="bg-blue-600 hover:bg-blue-700">
-            <Upload className="mr-2 h-4 w-4" />
-            Upload Document
-          </Button>
-          <Button variant="outline">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Create Folder
-          </Button>
-        </div>
+        <DocumentActions onUpload={handleUpload} onCreateFolder={handleCreateFolder} />
       </div>
 
       {/* Search and Categories */}
@@ -266,17 +291,8 @@ export const DocumentManager = () => {
                     </div>
                   </div>
 
-                  {/* Action Buttons */}
-                  <div className="flex space-x-2 pt-2 border-t border-gray-100">
-                    <Button variant="outline" size="sm" className="flex-1">
-                      <Eye className="mr-2 h-3 w-3" />
-                      View
-                    </Button>
-                    <Button variant="outline" size="sm" className="flex-1">
-                      <Download className="mr-2 h-3 w-3" />
-                      Download
-                    </Button>
-                  </div>
+                  {/* Enhanced Action Buttons */}
+                  <DocumentItemActions document={doc} />
                 </CardContent>
               </Card>
             ))}

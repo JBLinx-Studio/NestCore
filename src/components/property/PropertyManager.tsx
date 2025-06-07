@@ -19,6 +19,7 @@ import {
 import { PropertyForm } from "./PropertyForm";
 import { PropertyStats } from "./PropertyStats";
 import { PropertyGrid } from "./PropertyGrid";
+import { PropertyActions } from "./PropertyActions";
 import { toast } from "sonner";
 
 export const PropertyManager = () => {
@@ -118,6 +119,11 @@ export const PropertyManager = () => {
 
   const handleViewProperty = (property: any) => {
     toast.info(`Viewing ${property.name} - Full property details coming soon!`);
+  };
+
+  const handleDeleteProperty = (property: any) => {
+    setProperties(properties.filter(p => p.id !== property.id));
+    toast.success(`${property.name} has been deleted successfully`);
   };
 
   const handleSaveProperty = (propertyData: any) => {
@@ -276,6 +282,8 @@ export const PropertyManager = () => {
         onAddProperty={handleAddProperty}
         onEditProperty={handleEditProperty}
         onViewProperty={handleViewProperty}
+        onDeleteProperty={handleDeleteProperty}
+        PropertyActionsComponent={PropertyActions}
       />
 
       {/* Enhanced Property Form Dialog */}
