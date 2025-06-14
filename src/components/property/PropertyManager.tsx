@@ -330,63 +330,6 @@ export const PropertyManager = () => {
         onViewProperty={handleViewProperty}
         onDeleteProperty={handleDeleteProperty}
         PropertyActionsComponent={PropertyActions}
-        extraDetailsRender={(property) => (
-          <div className="space-y-2 mt-2">
-            <div>
-              <div className="text-sm font-semibold">Valuation Details</div>
-              <div className="flex gap-2 flex-wrap">
-                <span className="text-xs">Current: R{priceValuation[property.id]?.current ?? "N/A"}</span>
-                <span className="text-xs">List: R{priceValuation[property.id]?.list ?? "N/A"}</span>
-                <span className="text-xs">Last Sold: R{priceValuation[property.id]?.lastSold ?? "N/A"}</span>
-                {priceValuation[property.id]?.valuationDoc && (
-                  <a
-                    className="underline text-blue-500 text-xs"
-                    href={priceValuation[property.id].valuationDoc!.url}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Valuation Doc
-                  </a>
-                )}
-              </div>
-              <div className="flex gap-2 mt-1">
-                <Input
-                  type="number"
-                  placeholder="Update Current"
-                  min={0}
-                  className="w-28"
-                  value={priceValuation[property.id]?.current ?? ""}
-                  onChange={e => setPriceValuation(val => ({ ...val, [property.id]: { ...val[property.id], current: Number(e.target.value) } }))}
-                />
-                <Input
-                  type="number"
-                  placeholder="List Price"
-                  min={0}
-                  className="w-28"
-                  value={priceValuation[property.id]?.list ?? ""}
-                  onChange={e => setPriceValuation(val => ({ ...val, [property.id]: { ...val[property.id], list: Number(e.target.value) } }))}
-                />
-                <Input
-                  type="number"
-                  placeholder="Last Sold"
-                  min={0}
-                  className="w-28"
-                  value={priceValuation[property.id]?.lastSold ?? ""}
-                  onChange={e => setPriceValuation(val => ({ ...val, [property.id]: { ...val[property.id], lastSold: Number(e.target.value) } }))}
-                />
-                <Input
-                  type="file"
-                  accept=".pdf,image/*"
-                  className="w-40"
-                  onChange={e => {
-                    const file = e.target.files?.[0];
-                    if (file) handleValuationDocUpload(property.id, file);
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-        )}
       />
 
       {/* Enhanced Property Form Dialog */}
