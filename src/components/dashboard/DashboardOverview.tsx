@@ -1,4 +1,3 @@
-
 import { DashboardStats } from "./DashboardStats";
 import { ActivityFeed } from "./ActivityFeed";
 import { QuickActions } from "./QuickActions";
@@ -26,6 +25,7 @@ import {
   Building,
   UserCheck
 } from "lucide-react";
+import { LandingHero } from "@/components/landing/LandingHero";
 
 interface DashboardOverviewProps {
   setActiveTab: (tab: string) => void;
@@ -56,6 +56,16 @@ export const DashboardOverview = ({ setActiveTab }: DashboardOverviewProps) => {
 
   return (
     <div className="space-y-8">
+      {/* Landing Hero Section */}
+      <LandingHero onSelectRole={(role) => {
+        // Later improve this to route or filter dashboard!
+        if (role === "owner") setActiveTab("dashboard");
+        if (role === "agent") setActiveTab("properties");
+        if (role === "renter") setActiveTab("tenants");
+        if (role === "lawyer") setActiveTab("documents");
+        if (role === "contractor") setActiveTab("utilities");
+      }} />
+
       {/* Enhanced Header */}
       <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 p-8 rounded-3xl border border-blue-100">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
