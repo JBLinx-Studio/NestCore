@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -94,10 +93,6 @@
 /* Custom fonts for the whole platform */
 body {
   @apply font-sans bg-background text-foreground;
-}
-
-h1, h2, h3, .font-heading {
-  @apply font-heading;
 }
 
 /* Optionally, tweak global backgrounds for a premium feel */
