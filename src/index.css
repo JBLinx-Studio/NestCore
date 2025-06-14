@@ -90,12 +90,18 @@
   }
 }
 
+/* Custom fonts for the whole platform */
+body {
+  @apply font-sans bg-background text-foreground;
+}
+
+/* Optionally, tweak global backgrounds for a premium feel */
 @layer base {
   * {
     @apply border-border;
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-gradient-to-br from-[#f3f4f6] via-[#f0f4ff] to-[#f8f0fc];
   }
 }
