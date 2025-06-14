@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -96,9 +95,13 @@ body {
   @apply font-sans bg-background text-foreground;
 }
 
-h1, h2, h3, .font-heading {
-  @apply font-heading;
-}
+/* 
+  Removed:
+  h1, h2, h3, .font-heading {
+    @apply font-heading;
+  }
+  Use the className="font-heading" directly in your components!
+*/
 
 /* Optionally, tweak global backgrounds for a premium feel */
 @layer base {
@@ -107,6 +110,6 @@ h1, h2, h3, .font-heading {
   }
 
   body {
-    @apply bg-gradient-to-br from-[#f3f4f6] via-[#f0f4ff] to-[#f8f0fc];
+    @apply bg-gradient-to-br from-[#f3f4f6] via-[#f0f4f6] to-[#f8f0fc];
   }
 }
