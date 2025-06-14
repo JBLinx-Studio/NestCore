@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, Download, Upload, Home } from "lucide-react";
+import { Search, Filter, Download, Upload, Home, Settings } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -22,6 +22,7 @@ import { PropertyActions } from "./PropertyActions";
 import { PropertyView } from "./PropertyView";
 import { toast } from "sonner";
 import { PropertyWorkflow } from "./PropertyWorkflow";
+import { AppSettingsDialog } from "./AppSettingsDialog";
 
 export const PropertyManager = () => {
   const [properties, setProperties] = useState([
@@ -99,6 +100,20 @@ export const PropertyManager = () => {
   const [viewingProperty, setViewingProperty] = useState<any>(null);
   const [showPropertyView, setShowPropertyView] = useState(false);
   const [priceValuation, setPriceValuation] = useState<{ [id: number]: { current: number; list: number; lastSold: number; valuationDoc?: { url: string, name: string } } }>({});
+  const [showSettings, setShowSettings] = useState(false);
+
+  // Settings state
+  const [currency, setCurrency] = useState("ZAR"); // Default Rand
+  const [metric, setMetric] = useState("metric");  // Default metric
+
+  // Get currency symbol for display
+  const currencySymbols: Record<string, string> = {
+    ZAR: "R",
+    USD: "$",
+    EUR: "€",
+    GBP: "£",
+  };
+  const currencySymbol = currencySymbols[currency] || currency;
 
   const filteredProperties = properties.filter(property => {
     const matchesSearch = property.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -262,6 +277,15 @@ export const PropertyManager = () => {
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
+          <Button 
+            variant="ghost"
+            onClick={() => setShowSettings(true)}
+            className="ml-2 flex items-center"
+            aria-label="Settings"
+          >
+            <Settings className="h-5 w-5 mr-1 text-gray-500" />
+            Settings
+          </Button>
         </div>
       </div>
 
@@ -271,8 +295,8 @@ export const PropertyManager = () => {
         onQuickAction={handleQuickAction}
       />
 
-      {/* Enhanced Property Stats */}
-      <PropertyStats properties={properties} />
+      {/* Enhanced Property Stats (now uses currency symbol) */}
+      <PropertyStats properties={properties} currencySymbol={currencySymbol} />
 
       {/* Enhanced Search and Filters */}
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
@@ -358,6 +382,16 @@ export const PropertyManager = () => {
           setShowPropertyView(false);
           handleEditProperty(viewingProperty);
         }}
+      />
+
+      {/* Settings Dialog */}
+      <AppSettingsDialog
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+        currency={currency}
+        setCurrency={setCurrency}
+        metric={metric}
+        setMetric={setMetric}
       />
     </div>
   );

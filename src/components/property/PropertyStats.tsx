@@ -1,12 +1,12 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building, Users, TrendingUp, DollarSign, Home, MapPin } from "lucide-react";
 
 interface PropertyStatsProps {
   properties: any[];
+  currencySymbol?: string; // NEW: optionally passed in
 }
 
-export const PropertyStats = ({ properties }: PropertyStatsProps) => {
+export const PropertyStats = ({ properties, currencySymbol = "R" }: PropertyStatsProps) => {
   const totalProperties = properties.length;
   const totalUnits = properties.reduce((sum, p) => sum + (p.units || 0), 0);
   const occupiedUnits = properties.reduce((sum, p) => sum + (p.occupiedUnits || 0), 0);
@@ -49,7 +49,7 @@ export const PropertyStats = ({ properties }: PropertyStatsProps) => {
     },
     {
       title: "Monthly Revenue",
-      value: `R${totalRevenue.toLocaleString()}`,
+      value: `${currencySymbol}${totalRevenue.toLocaleString()}`,
       icon: DollarSign,
       color: "from-emerald-500 to-emerald-600",
       bgColor: "bg-emerald-50",
@@ -57,7 +57,7 @@ export const PropertyStats = ({ properties }: PropertyStatsProps) => {
     },
     {
       title: "Average Rent",
-      value: `R${averageRent.toLocaleString()}`,
+      value: `${currencySymbol}${averageRent.toLocaleString()}`,
       icon: MapPin,
       color: "from-pink-500 to-pink-600",
       bgColor: "bg-pink-50",
