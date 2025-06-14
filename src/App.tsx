@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,6 +11,7 @@ import { TenantManager } from "@/components/tenant/TenantManager";
 import { UtilityTracker } from "@/components/utility/UtilityTracker";
 import { DocumentManager } from "@/components/document/DocumentManager";
 import { AIAssistant } from "@/components/ai/AIAssistant";
+import { PeopleManager } from "@/components/people/PeopleManager";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +33,8 @@ const App = () => {
         return <DocumentManager />;
       case "ai-assistant":
         return <AIAssistant />;
+      case "people":
+        return <PeopleManager />;
       default:
         return <DashboardOverview setActiveTab={setActiveTab} />;
     }
@@ -70,6 +72,7 @@ const App = () => {
                   <Route path="/utilities" element={<UtilityTracker />} />
                   <Route path="/documents" element={<DocumentManager />} />
                   <Route path="/ai-assistant" element={<AIAssistant />} />
+                  <Route path="/people" element={<PeopleManager />} />
                   <Route path="*" element={renderActiveComponent()} />
                 </Routes>
               </div>
