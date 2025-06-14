@@ -29,6 +29,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { DocumentWorkflow } from "./DocumentWorkflow";
+import { CategoriesSidebar } from "./CategoriesSidebar";
+import { DocumentCard } from "./DocumentCard";
+import { getFileIcon, getStatusColor } from "./categories";
 
 export const DocumentManager = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -222,29 +225,6 @@ export const DocumentManager = () => {
     { id: "marketing", name: "Marketing", count: documents.filter(d => d.category === "Marketing").length }
   ];
 
-  const getFileIcon = (fileType: string) => {
-    switch (fileType) {
-      case 'pdf': return <FileText className="h-5 w-5 text-red-500" />;
-      case 'image': return <Image className="h-5 w-5 text-blue-500" />;
-      case 'images': return <Image className="h-5 w-5 text-blue-500" />;
-      case 'folder': return <Folder className="h-5 w-5 text-yellow-500" />;
-      default: return <FileText className="h-5 w-5 text-gray-500" />;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'signed': return 'bg-green-100 text-green-800 border-green-200';
-      case 'processed': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'active': return 'bg-green-100 text-green-800 border-green-200';
-      case 'approved': return 'bg-green-100 text-green-800 border-green-200';
-      case 'current': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'pending': return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'uploaded': return 'bg-purple-100 text-purple-800 border-purple-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
-  };
-
   const filteredDocuments = documents.filter(doc => {
     const matchesSearch = doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          doc.property.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -255,26 +235,6 @@ export const DocumentManager = () => {
     
     return matchesSearch && matchesCategory;
   });
-
-  // Enhanced Document Item Actions Component
-  const EnhancedDocumentItemActions = ({ document }: { document: any }) => (
-    <div className="flex space-x-2 pt-2 border-t border-gray-100">
-      <Button variant="outline" size="sm" className="flex-1" onClick={() => handleViewDocument(document)}>
-        <Eye className="mr-2 h-3 w-3" />
-        View
-      </Button>
-      <Button variant="outline" size="sm" className="flex-1" onClick={() => handleDownloadDocument(document)}>
-        <Download className="mr-2 h-3 w-3" />
-        Download
-      </Button>
-      <Button variant="outline" size="sm" onClick={() => handleShareDocument(document)}>
-        <Share className="h-3 w-3" />
-      </Button>
-      <Button variant="outline" size="sm" onClick={() => handleDeleteDocument(document.id)}>
-        <Trash2 className="h-3 w-3 text-red-500" />
-      </Button>
-    </div>
-  );
 
   return (
     <div className="space-y-6">
@@ -298,89 +258,12 @@ export const DocumentManager = () => {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Categories Sidebar */}
         <div className="lg:col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Folder className="h-5 w-5 text-blue-600" />
-                <span>Categories</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {categories.map((category) => (
-                <Button
-                  key={category.id}
-                  variant={selectedCategory === category.id ? "default" : "ghost"}
-                  className="w-full justify-between"
-                  onClick={() => setSelectedCategory(category.id)}
-                >
-                  <span>{category.name}</span>
-                  <Badge variant="secondary" className="ml-auto">
-                    {category.count}
-                  </Badge>
-                </Button>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card className="mt-4">
-            <CardHeader>
-              <CardTitle className="text-base">Quick Upload</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button variant="outline" size="sm" className="w-full justify-start" onClick={() => {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = '.pdf';
-                input.onchange = (e: any) => {
-                  const file = e.target.files[0];
-                  if (file) handleUpload(file);
-                };
-                input.click();
-              }}>
-                <FileText className="mr-2 h-4 w-4" />
-                Lease Agreement
-              </Button>
-              <Button variant="outline" size="sm" className="w-full justify-start" onClick={() => {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = 'image/*';
-                input.multiple = true;
-                input.onchange = (e: any) => {
-                  Array.from(e.target.files).forEach((file: any) => handleUpload(file));
-                };
-                input.click();
-              }}>
-                <Image className="mr-2 h-4 w-4" />
-                Property Photos
-              </Button>
-              <Button variant="outline" size="sm" className="w-full justify-start" onClick={() => {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = '.pdf';
-                input.onchange = (e: any) => {
-                  const file = e.target.files[0];
-                  if (file) handleUpload(file);
-                };
-                input.click();
-              }}>
-                <FileText className="mr-2 h-4 w-4" />
-                Utility Bill
-              </Button>
-              <Button variant="outline" size="sm" className="w-full justify-start" onClick={() => {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = '.pdf,.jpg,.jpeg,.png';
-                input.onchange = (e: any) => {
-                  const file = e.target.files[0];
-                  if (file) handleUpload(file);
-                };
-                input.click();
-              }}>
-                <FileText className="mr-2 h-4 w-4" />
-                Expense Receipt
-              </Button>
-            </CardContent>
-          </Card>
+          <CategoriesSidebar
+            categories={categories}
+            selectedCategory={selectedCategory}
+            setSelectedCategory={setSelectedCategory}
+            handleUpload={handleUpload}
+          />
         </div>
 
         <div className="lg:col-span-3 space-y-4">
@@ -397,47 +280,14 @@ export const DocumentManager = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filteredDocuments.map((doc) => (
-              <Card key={doc.id} className="hover:shadow-md transition-shadow duration-200">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start space-x-3 flex-1">
-                      {getFileIcon(doc.fileType)}
-                      <div className="flex-1 min-w-0">
-                        <CardTitle className="text-base truncate">{doc.name}</CardTitle>
-                        <CardDescription className="flex items-center space-x-2 mt-1">
-                          <span>{doc.size}</span>
-                          <span>•</span>
-                          <span>{doc.category}</span>
-                        </CardDescription>
-                      </div>
-                    </div>
-                    <Badge className={getStatusColor(doc.status)}>
-                      {doc.status}
-                    </Badge>
-                  </div>
-                </CardHeader>
-
-                <CardContent className="space-y-3">
-                  <div className="space-y-2">
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Building className="h-4 w-4 mr-2" />
-                      <span>{doc.property}</span>
-                    </div>
-                    {doc.tenant !== "N/A" && (
-                      <div className="flex items-center text-sm text-gray-600">
-                        <User className="h-4 w-4 mr-2" />
-                        <span>{doc.tenant}</span>
-                      </div>
-                    )}
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Calendar className="h-4 w-4 mr-2" />
-                      <span>Uploaded {new Date(doc.uploadDate).toLocaleDateString()}</span>
-                    </div>
-                  </div>
-
-                  <EnhancedDocumentItemActions document={doc} />
-                </CardContent>
-              </Card>
+              <DocumentCard
+                key={doc.id}
+                doc={doc}
+                onView={handleViewDocument}
+                onDownload={handleDownloadDocument}
+                onShare={handleShareDocument}
+                onDelete={handleDeleteDocument}
+              />
             ))}
           </div>
 
