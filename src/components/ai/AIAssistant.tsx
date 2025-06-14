@@ -128,7 +128,8 @@ export const AIAssistant = () => {
       id: Date.now(),
       type: "user",
       content: message,
-      timestamp: new Date()
+      timestamp: new Date(),
+      suggestions: []
     };
     
     setMessages(prev => [...prev, userMessage]);
