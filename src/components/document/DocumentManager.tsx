@@ -479,19 +479,40 @@ export const DocumentManager = () => {
             </DialogDescription>
           </DialogHeader>
           
-          <div className="flex-1 bg-gray-100 rounded-lg p-8 text-center">
+          <div className="flex-1 bg-gray-100 rounded-lg p-8 text-center min-h-[300px] flex items-center justify-center relative">
             {viewingDocument?.fileType === 'image' || viewingDocument?.fileType === 'images' ? (
-              <div>
-                <Image className="h-16 w-16 mx-auto mb-4 text-gray-400" />
-                <p className="text-gray-600">Image viewer would display here</p>
-              </div>
+              viewingDocument.url ? (
+                <img
+                  src={viewingDocument.url}
+                  alt={viewingDocument.name}
+                  className="max-h-[400px] max-w-full mx-auto rounded shadow"
+                  style={{ objectFit: 'contain' }}
+                />
+              ) : (
+                <div>
+                  <Image className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+                  <p className="text-gray-600">Unable to load image.</p>
+                </div>
+              )
+            ) : viewingDocument?.fileType === 'pdf' ? (
+              viewingDocument.url ? (
+                <iframe
+                  src={viewingDocument.url}
+                  title={viewingDocument.name}
+                  className="w-full h-[500px] bg-white rounded shadow border"
+                  style={{ minHeight: 360 }}
+                  frameBorder={0}
+                />
+              ) : (
+                <div>
+                  <FileText className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+                  <p className="text-gray-600">PDF could not be loaded.</p>
+                </div>
+              )
             ) : (
               <div>
                 <FileText className="h-16 w-16 mx-auto mb-4 text-gray-400" />
-                <p className="text-gray-600">PDF viewer would display here</p>
-                <p className="text-sm text-gray-500 mt-2">
-                  In a production app, this would show the actual document content
-                </p>
+                <p className="text-gray-600">This file type is not supported for preview yet.</p>
               </div>
             )}
           </div>
