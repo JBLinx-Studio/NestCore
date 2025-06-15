@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, Filter, Download, Upload, Home, Settings } from "lucide-react";
 import {
   Dialog,
@@ -23,6 +24,7 @@ import { PropertyView } from "./PropertyView";
 import { toast } from "sonner";
 import { PropertyWorkflow } from "./PropertyWorkflow";
 import { AppSettingsDialog } from "./AppSettingsDialog";
+import { PropertySearchTab } from "./PropertySearchTab";
 
 export const PropertyManager = () => {
   const [properties, setProperties] = useState([
@@ -101,6 +103,7 @@ export const PropertyManager = () => {
   const [showPropertyView, setShowPropertyView] = useState(false);
   const [priceValuation, setPriceValuation] = useState<{ [id: number]: { current: number; list: number; lastSold: number; valuationDoc?: { url: string, name: string } } }>({});
   const [showSettings, setShowSettings] = useState(false);
+  const [activeTab, setActiveTab] = useState("portfolio");
 
   // Settings state
   const [currency, setCurrency] = useState("ZAR"); // Default Rand
@@ -244,8 +247,8 @@ export const PropertyManager = () => {
             <Home className="h-8 w-8 text-white" />
           </div>
           <div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-1">Property Portfolio</h1>
-            <p className="text-lg text-gray-600">Manage your properties with NestCore's advanced platform</p>
+            <h1 className="text-4xl font-bold text-gray-900 mb-1">Property Management</h1>
+            <p className="text-lg text-gray-600">Manage your portfolio and search any property in South Africa</p>
             <div className="flex gap-2 mt-3">
               <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                 {properties.length} Total Properties
@@ -289,72 +292,86 @@ export const PropertyManager = () => {
         </div>
       </div>
 
-      {/* New Workflow Component */}
-      <PropertyWorkflow 
-        properties={properties} 
-        onQuickAction={handleQuickAction}
-      />
+      {/* Main Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2 bg-white border border-slate-200/60 rounded-xl p-1 shadow-lg">
+          <TabsTrigger value="portfolio" className="text-lg py-3">My Portfolio</TabsTrigger>
+          <TabsTrigger value="search" className="text-lg py-3">Property Search</TabsTrigger>
+        </TabsList>
 
-      {/* Enhanced Property Stats (now uses currency symbol) */}
-      <PropertyStats properties={properties} currencySymbol={currencySymbol} />
+        <TabsContent value="portfolio" className="space-y-6">
+          {/* New Workflow Component */}
+          <PropertyWorkflow 
+            properties={properties} 
+            onQuickAction={handleQuickAction}
+          />
 
-      {/* Enhanced Search and Filters */}
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-        <div className="flex flex-col lg:flex-row gap-6 items-center justify-between">
-          <div className="flex-1 flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4 w-full">
-            <div className="relative flex-1 max-w-md w-full">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-              <Input
-                placeholder="Search properties, addresses, descriptions..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-12 h-12 border-gray-300 focus:border-blue-500 rounded-xl text-lg"
-              />
-            </div>
-            
-            <div className="flex space-x-3">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-48 h-12 rounded-xl">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="vacant">Vacant</SelectItem>
-                  <SelectItem value="maintenance">Maintenance</SelectItem>
-                  <SelectItem value="unavailable">Unavailable</SelectItem>
-                </SelectContent>
-              </Select>
+          {/* Enhanced Property Stats (now uses currency symbol) */}
+          <PropertyStats properties={properties} currencySymbol={currencySymbol} />
 
-              <Select value={municipalityFilter} onValueChange={setMunicipalityFilter}>
-                <SelectTrigger className="w-48 h-12 rounded-xl">
-                  <SelectValue placeholder="Filter by municipality" />
-                </SelectTrigger>
-                <SelectContent>
-                  {municipalities.map((municipality) => (
-                    <SelectItem key={municipality} value={municipality}>
-                      {municipality === "all" ? "All Municipalities" : municipality}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          {/* Enhanced Search and Filters */}
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+            <div className="flex flex-col lg:flex-row gap-6 items-center justify-between">
+              <div className="flex-1 flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4 w-full">
+                <div className="relative flex-1 max-w-md w-full">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <Input
+                    placeholder="Search properties, addresses, descriptions..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-12 h-12 border-gray-300 focus:border-blue-500 rounded-xl text-lg"
+                  />
+                </div>
+                
+                <div className="flex space-x-3">
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-48 h-12 rounded-xl">
+                      <Filter className="h-4 w-4 mr-2" />
+                      <SelectValue placeholder="Filter by status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="vacant">Vacant</SelectItem>
+                      <SelectItem value="maintenance">Maintenance</SelectItem>
+                      <SelectItem value="unavailable">Unavailable</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Select value={municipalityFilter} onValueChange={setMunicipalityFilter}>
+                    <SelectTrigger className="w-48 h-12 rounded-xl">
+                      <SelectValue placeholder="Filter by municipality" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {municipalities.map((municipality) => (
+                        <SelectItem key={municipality} value={municipality}>
+                          {municipality === "all" ? "All Municipalities" : municipality}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Enhanced Property Grid/List */}
-      <PropertyGrid
-        properties={filteredProperties}
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-        onAddProperty={handleAddProperty}
-        onEditProperty={handleEditProperty}
-        onViewProperty={handleViewProperty}
-        onDeleteProperty={handleDeleteProperty}
-        PropertyActionsComponent={PropertyActions}
-      />
+          {/* Enhanced Property Grid/List */}
+          <PropertyGrid
+            properties={filteredProperties}
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+            onAddProperty={handleAddProperty}
+            onEditProperty={handleEditProperty}
+            onViewProperty={handleViewProperty}
+            onDeleteProperty={handleDeleteProperty}
+            PropertyActionsComponent={PropertyActions}
+          />
+        </TabsContent>
+
+        <TabsContent value="search">
+          <PropertySearchTab />
+        </TabsContent>
+      </Tabs>
 
       {/* Enhanced Property Form Dialog */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
