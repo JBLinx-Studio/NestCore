@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +8,7 @@ import {
   Navigation, 
   Maximize2, 
   Minimize2,
-  StreetView,
+  Camera,
   Map,
   Satellite,
   Layers
@@ -243,7 +242,7 @@ export const PropertyMapsViewer = ({ property, onLocationUpdate }: PropertyMapsV
             <TabsContent value="streetview" className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <StreetView className="h-5 w-5 text-green-600" />
+                  <Camera className="h-5 w-5 text-green-600" />
                   <span className="font-medium">Street Level View</span>
                 </div>
                 <Button
