@@ -8,33 +8,17 @@ import {
   Search, 
   MapPin, 
   Building, 
-  Calendar,
-  DollarSign,
-  Home,
   Loader2,
   AlertTriangle,
   CheckCircle,
-  XCircle
+  XCircle,
+  Info
 } from "lucide-react";
 import { openStreetMapService, PropertyLocation } from "@/services/OpenStreetMapService";
 import { toast } from "sonner";
 
-interface PropertyDetails {
-  erfNumber?: string;
-  propertyType: string;
-  size?: string;
-  bedrooms?: number;
-  bathrooms?: number;
-  parkingSpaces?: number;
-  yearBuilt?: number;
-  marketValue?: number;
-  rates?: number;
-  isExample: boolean;
-}
-
 interface SearchResult {
   location: PropertyLocation;
-  details: PropertyDetails;
 }
 
 export const PropertySearch = () => {
@@ -57,17 +41,13 @@ export const PropertySearch = () => {
       const locations = await openStreetMapService.searchProperties(searchQuery, 10);
       
       const searchResults: SearchResult[] = locations.map(location => ({
-        location,
-        details: {
-          propertyType: 'Example Property Type',
-          isExample: true
-        }
+        location
       }));
 
       setResults(searchResults);
       
       if (searchResults.length === 0) {
-        toast.info("No properties found for your search");
+        toast.info("No locations found for your search");
       } else {
         toast.success(`Found ${searchResults.length} real locations from OpenStreetMap`);
       }
@@ -92,10 +72,10 @@ export const PropertySearch = () => {
         <CardHeader>
           <CardTitle className="flex items-center space-x-2 text-2xl">
             <Search className="h-6 w-6 text-blue-600" />
-            <span>Property Location Search</span>
+            <span>Real Estate Location Search</span>
           </CardTitle>
           <CardDescription className="text-lg">
-            Search for real property locations using OpenStreetMap data
+            Search for actual property locations using OpenStreetMap data
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -207,7 +187,7 @@ export const PropertySearch = () => {
         {/* Location Details */}
         <div className="space-y-4">
           <h3 className="text-xl font-semibold flex items-center">
-            <Home className="h-5 w-5 mr-2 text-blue-600" />
+            <Building className="h-5 w-5 mr-2 text-blue-600" />
             Location Details
           </h3>
           
@@ -266,25 +246,25 @@ export const PropertySearch = () => {
                 </CardContent>
               </Card>
 
-              {/* Property Details Notice */}
-              <Card className="border-yellow-200 bg-yellow-50">
+              {/* Property Data Availability Notice */}
+              <Card className="border-blue-200 bg-blue-50">
                 <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center space-x-2 text-lg text-yellow-800">
-                    <AlertTriangle className="h-5 w-5" />
-                    <span>Property Details - Example Only</span>
+                  <CardTitle className="flex items-center space-x-2 text-lg text-blue-800">
+                    <Info className="h-5 w-5" />
+                    <span>Property Data Options</span>
                   </CardTitle>
-                  <CardDescription className="text-yellow-700">
-                    Property ownership and detail APIs require paid subscriptions. Location data above is real.
+                  <CardDescription className="text-blue-700">
+                    Real property ownership and valuation data requires specialized APIs
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-sm text-yellow-800">
-                    <p className="font-medium mb-2">To get real property data, you would need:</p>
+                  <div className="text-sm text-blue-800">
+                    <p className="font-medium mb-2">For real property details, you can integrate:</p>
                     <ul className="list-disc list-inside space-y-1">
-                      <li>Lightstone Property API (paid)</li>
-                      <li>Property24 API (paid)</li>
-                      <li>SA Deeds Office API access</li>
-                      <li>Municipal database access</li>
+                      <li>Lightstone Property API (property valuations)</li>
+                      <li>Property24 API (listings and market data)</li>
+                      <li>SA Deeds Office (ownership records)</li>
+                      <li>Municipal databases (rates and services)</li>
                     </ul>
                   </div>
                 </CardContent>
@@ -295,16 +275,16 @@ export const PropertySearch = () => {
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center space-x-2 text-lg">
                     <Building className="h-5 w-5" />
-                    <span>Available Integrations</span>
+                    <span>Available Services</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
                     <div className="flex items-center space-x-2">
                       <CheckCircle className="h-4 w-4 text-green-600" />
-                      <span className="text-sm font-medium">OpenStreetMap</span>
+                      <span className="text-sm font-medium">OpenStreetMap Geocoding</span>
                     </div>
-                    <Badge className="bg-green-100 text-green-800">Active & Free</Badge>
+                    <Badge className="bg-green-100 text-green-800">Active</Badge>
                   </div>
                   
                   <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
@@ -312,15 +292,15 @@ export const PropertySearch = () => {
                       <XCircle className="h-4 w-4 text-gray-400" />
                       <span className="text-sm font-medium">Property Ownership APIs</span>
                     </div>
-                    <Badge variant="secondary">Requires Setup</Badge>
+                    <Badge variant="secondary">Setup Required</Badge>
                   </div>
                   
                   <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
                     <div className="flex items-center space-x-2">
                       <XCircle className="h-4 w-4 text-gray-400" />
-                      <span className="text-sm font-medium">Deeds Office API</span>
+                      <span className="text-sm font-medium">Property Valuation APIs</span>
                     </div>
-                    <Badge variant="secondary">Limited Access</Badge>
+                    <Badge variant="secondary">Setup Required</Badge>
                   </div>
                 </CardContent>
               </Card>

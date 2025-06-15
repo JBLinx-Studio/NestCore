@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -28,72 +28,7 @@ import { AppSettingsDialog } from "./AppSettingsDialog";
 import { PropertySearchTab } from "./PropertySearchTab";
 
 export const PropertyManager = () => {
-  const [properties, setProperties] = useState([
-    {
-      id: 1,
-      name: "Sunset Apartments",
-      address: "123 Main St, Cape Town",
-      municipality: "City of Cape Town",
-      units: 12,
-      occupiedUnits: 10,
-      monthlyRent: 15000,
-      status: "active",
-      description: "Modern apartment complex with stunning sunset views and premium amenities including 24/7 security, swimming pool, and gym facilities.",
-      propertyType: "apartment",
-      images: [
-        { 
-          id: 1,
-          url: "https://images.unsplash.com/photo-1721322800607-8c38375eef04?w=400&h=300&fit=crop",
-          name: "main-view.jpg"
-        }
-      ],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    },
-    {
-      id: 2,
-      name: "Ocean View Villa",
-      address: "456 Beach Rd, Durban",
-      municipality: "eThekwini",
-      units: 1,
-      occupiedUnits: 0,
-      monthlyRent: 8500,
-      status: "vacant",
-      description: "Luxurious beachfront villa with panoramic ocean views, private garden, and direct beach access.",
-      propertyType: "villa",
-      images: [
-        { 
-          id: 2,
-          url: "https://images.unsplash.com/photo-1518005020951-eccb494ad742?w=400&h=300&fit=crop",
-          name: "ocean-villa.jpg"
-        }
-      ],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    },
-    {
-      id: 3,
-      name: "Green Gardens Townhouse",
-      address: "789 Garden Lane, Pretoria",
-      municipality: "Tshwane",
-      units: 8,
-      occupiedUnits: 6,
-      monthlyRent: 12000,
-      status: "active",
-      description: "Family-friendly townhouse complex with beautiful gardens, playground, and excellent schools nearby.",
-      propertyType: "townhouse",
-      images: [
-        { 
-          id: 3,
-          url: "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=400&h=300&fit=crop",
-          name: "townhouse.jpg"
-        }
-      ],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    }
-  ]);
-
+  const [properties, setProperties] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [municipalityFilter, setMunicipalityFilter] = useState("all");
@@ -109,6 +44,26 @@ export const PropertyManager = () => {
   const [currency, setCurrency] = useState("ZAR");
   const [metric, setMetric] = useState("metric");
 
+  // Load properties from localStorage on component mount
+  useEffect(() => {
+    const savedProperties = localStorage.getItem('nestcore-properties');
+    if (savedProperties) {
+      try {
+        setProperties(JSON.parse(savedProperties));
+      } catch (error) {
+        console.error('Failed to load properties from localStorage:', error);
+        setProperties([]);
+      }
+    }
+  }, []);
+
+  // Save properties to localStorage whenever properties change
+  useEffect(() => {
+    if (properties.length > 0) {
+      localStorage.setItem('nestcore-properties', JSON.stringify(properties));
+    }
+  }, [properties]);
+
   // Get currency symbol for display
   const currencySymbols: Record<string, string> = {
     ZAR: "R",
@@ -119,15 +74,15 @@ export const PropertyManager = () => {
   const currencySymbol = currencySymbols[currency] || currency;
 
   const filteredProperties = properties.filter(property => {
-    const matchesSearch = property.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         property.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         property.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = property.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         property.address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         property.description?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || property.status === statusFilter;
     const matchesMunicipality = municipalityFilter === "all" || property.municipality === municipalityFilter;
     return matchesSearch && matchesStatus && matchesMunicipality;
   });
 
-  const municipalities = ["all", ...Array.from(new Set(properties.map(p => p.municipality)))];
+  const municipalities = ["all", ...Array.from(new Set(properties.map(p => p.municipality).filter(Boolean)))];
 
   const handleAddProperty = () => {
     setEditingProperty(null);
@@ -146,15 +101,25 @@ export const PropertyManager = () => {
   };
 
   const handleDeleteProperty = (property: any) => {
-    setProperties(properties.filter(p => p.id !== property.id));
+    const updatedProperties = properties.filter(p => p.id !== property.id);
+    setProperties(updatedProperties);
+    
+    // Update localStorage
+    if (updatedProperties.length === 0) {
+      localStorage.removeItem('nestcore-properties');
+    } else {
+      localStorage.setItem('nestcore-properties', JSON.stringify(updatedProperties));
+    }
+    
     toast.success(`${property.name} has been deleted successfully`);
   };
 
   const handleSaveProperty = (propertyData: any) => {
     if (editingProperty) {
-      setProperties(properties.map(p => 
-        p.id === editingProperty.id ? { ...propertyData, id: editingProperty.id } : p
-      ));
+      const updatedProperties = properties.map(p => 
+        p.id === editingProperty.id ? { ...propertyData, id: editingProperty.id, updatedAt: new Date().toISOString() } : p
+      );
+      setProperties(updatedProperties);
       toast.success("Property updated successfully!");
     } else {
       const newProperty = {
@@ -171,6 +136,11 @@ export const PropertyManager = () => {
   };
 
   const handleExport = () => {
+    if (properties.length === 0) {
+      toast.error("No properties to export");
+      return;
+    }
+
     const dataStr = JSON.stringify(properties, null, 2);
     const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
     const exportFileDefaultName = `nestcore-properties-${new Date().toISOString().split('T')[0]}.json`;
@@ -192,8 +162,12 @@ export const PropertyManager = () => {
         reader.onload = (e: any) => {
           try {
             const importedProperties = JSON.parse(e.target.result);
-            setProperties([...properties, ...importedProperties]);
-            toast.success(`Imported ${importedProperties.length} properties successfully!`);
+            if (Array.isArray(importedProperties)) {
+              setProperties([...properties, ...importedProperties]);
+              toast.success(`Imported ${importedProperties.length} properties successfully!`);
+            } else {
+              toast.error("Invalid file format. Expected an array of properties.");
+            }
           } catch (error) {
             toast.error("Failed to import properties. Please check the file format.");
           }
@@ -210,16 +184,16 @@ export const PropertyManager = () => {
         handleAddProperty();
         break;
       case "rent-collection":
-        toast.info("Opening rent collection dashboard...");
+        toast.info("Rent collection feature - add your implementation here");
         break;
       case "maintenance":
-        toast.info("Opening maintenance scheduler...");
+        toast.info("Maintenance scheduler feature - add your implementation here");
         break;
       case "tenant-screening":
-        toast.info("Opening tenant screening workflow...");
+        toast.info("Tenant screening feature - add your implementation here");
         break;
       default:
-        toast.info(`${action} workflow starting...`);
+        toast.info(`${action} feature - add your implementation here`);
     }
   };
 
@@ -233,10 +207,10 @@ export const PropertyManager = () => {
           </div>
           <div>
             <h1 className="text-4xl font-bold text-gray-900 mb-1">Property Management</h1>
-            <p className="text-lg text-gray-600">Manage your portfolio and search properties in South Africa</p>
+            <p className="text-lg text-gray-600">Manage your real estate portfolio with actual data</p>
             <div className="flex gap-2 mt-3">
               <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                {properties.length} Total Properties
+                {properties.length} Properties
               </span>
               <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                 {properties.filter(p => p.status === 'active').length} Active
@@ -261,6 +235,7 @@ export const PropertyManager = () => {
             variant="outline" 
             onClick={handleExport}
             className="bg-white hover:bg-gray-50 border-gray-300"
+            disabled={properties.length === 0}
           >
             <Download className="h-4 w-4 mr-2" />
             Export
@@ -277,7 +252,7 @@ export const PropertyManager = () => {
         </div>
       </div>
 
-      {/* Main Tabs - Fixed Structure */}
+      {/* Main Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-2 bg-white border border-slate-200/60 rounded-xl p-1 shadow-lg h-14">
           <TabsTrigger 
@@ -304,63 +279,80 @@ export const PropertyManager = () => {
           {/* Property Stats */}
           <PropertyStats properties={properties} currencySymbol={currencySymbol} />
 
-          {/* Search and Filters */}
-          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-            <div className="flex flex-col lg:flex-row gap-6 items-center justify-between">
-              <div className="flex-1 flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4 w-full">
-                <div className="relative flex-1 max-w-md w-full">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                  <Input
-                    placeholder="Search properties, addresses, descriptions..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-12 h-12 border-gray-300 focus:border-blue-500 rounded-xl text-lg"
-                  />
-                </div>
-                
-                <div className="flex space-x-3">
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-48 h-12 rounded-xl">
-                      <Filter className="h-4 w-4 mr-2" />
-                      <SelectValue placeholder="Filter by status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Status</SelectItem>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="vacant">Vacant</SelectItem>
-                      <SelectItem value="maintenance">Maintenance</SelectItem>
-                      <SelectItem value="unavailable">Unavailable</SelectItem>
-                    </SelectContent>
-                  </Select>
+          {/* Empty State */}
+          {properties.length === 0 ? (
+            <div className="bg-white p-12 rounded-2xl shadow-sm border border-gray-200 text-center">
+              <Home className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-2xl font-semibold text-gray-900 mb-2">No Properties Added Yet</h3>
+              <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                Start building your property portfolio by adding your first property. You can add details, photos, and track important information.
+              </p>
+              <Button onClick={handleAddProperty} size="lg" className="bg-blue-600 hover:bg-blue-700">
+                <Home className="h-5 w-5 mr-2" />
+                Add Your First Property
+              </Button>
+            </div>
+          ) : (
+            <>
+              {/* Search and Filters */}
+              <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                <div className="flex flex-col lg:flex-row gap-6 items-center justify-between">
+                  <div className="flex-1 flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4 w-full">
+                    <div className="relative flex-1 max-w-md w-full">
+                      <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                      <Input
+                        placeholder="Search properties..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-12 h-12 border-gray-300 focus:border-blue-500 rounded-xl text-lg"
+                      />
+                    </div>
+                    
+                    <div className="flex space-x-3">
+                      <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <SelectTrigger className="w-48 h-12 rounded-xl">
+                          <Filter className="h-4 w-4 mr-2" />
+                          <SelectValue placeholder="Filter by status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Status</SelectItem>
+                          <SelectItem value="active">Active</SelectItem>
+                          <SelectItem value="vacant">Vacant</SelectItem>
+                          <SelectItem value="maintenance">Maintenance</SelectItem>
+                          <SelectItem value="unavailable">Unavailable</SelectItem>
+                        </SelectContent>
+                      </Select>
 
-                  <Select value={municipalityFilter} onValueChange={setMunicipalityFilter}>
-                    <SelectTrigger className="w-48 h-12 rounded-xl">
-                      <SelectValue placeholder="Filter by municipality" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {municipalities.map((municipality) => (
-                        <SelectItem key={municipality} value={municipality}>
-                          {municipality === "all" ? "All Municipalities" : municipality}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                      <Select value={municipalityFilter} onValueChange={setMunicipalityFilter}>
+                        <SelectTrigger className="w-48 h-12 rounded-xl">
+                          <SelectValue placeholder="Filter by municipality" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {municipalities.map((municipality) => (
+                            <SelectItem key={municipality} value={municipality}>
+                              {municipality === "all" ? "All Municipalities" : municipality}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
 
-          {/* Property Grid */}
-          <PropertyGrid
-            properties={filteredProperties}
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
-            onAddProperty={handleAddProperty}
-            onEditProperty={handleEditProperty}
-            onViewProperty={handleViewProperty}
-            onDeleteProperty={handleDeleteProperty}
-            PropertyActionsComponent={PropertyActions}
-          />
+              {/* Property Grid */}
+              <PropertyGrid
+                properties={filteredProperties}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+                onAddProperty={handleAddProperty}
+                onEditProperty={handleEditProperty}
+                onViewProperty={handleViewProperty}
+                onDeleteProperty={handleDeleteProperty}
+                PropertyActionsComponent={PropertyActions}
+              />
+            </>
+          )}
         </TabsContent>
 
         <TabsContent value="search" className="space-y-6 mt-6">
