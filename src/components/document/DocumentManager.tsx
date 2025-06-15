@@ -34,6 +34,9 @@ import { DocumentCard } from "./DocumentCard";
 import { DropZone } from "./DropZone";
 import { DocumentBatchSelector } from "./DocumentBatchSelector";
 import { FileUploadProgress } from "./FileUploadProgress";
+import { ConfirmationDialog } from "./ConfirmationDialog";
+import { DocumentAnalytics } from "./DocumentAnalytics";
+import { DocumentFilters } from "./DocumentFilters";
 import { getFileIcon, getStatusColor } from "./categories";
 import { validateFiles, getFileCategory, formatFileSize } from "./fileValidation";
 
@@ -51,6 +54,9 @@ export const DocumentManager = () => {
   const [viewingDocument, setViewingDocument] = useState<any>(null);
   const [showDocumentView, setShowDocumentView] = useState(false);
   const [uploadingFiles, setUploadingFiles] = useState<UploadFile[]>([]);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [documentToDelete, setDocumentToDelete] = useState<number | null>(null);
+  const [advancedFilters, setAdvancedFilters] = useState<any>({});
   const [documents, setDocuments] = useState([
     {
       id: 1,
@@ -63,7 +69,9 @@ export const DocumentManager = () => {
       tenant: "Sarah Johnson",
       status: "signed",
       fileType: "pdf",
-      url: "#"
+      url: "#",
+      tags: ["lease", "residential", "signed"],
+      expiryDate: "2025-01-15"
     },
     {
       id: 2,
@@ -76,7 +84,9 @@ export const DocumentManager = () => {
       tenant: "N/A",
       status: "processed",
       fileType: "pdf",
-      url: "#"
+      url: "#",
+      tags: ["utility", "electricity", "march"],
+      amount: "$245.67"
     },
     {
       id: 3,
@@ -89,7 +99,9 @@ export const DocumentManager = () => {
       tenant: "N/A", 
       status: "active",
       fileType: "pdf",
-      url: "#"
+      url: "#",
+      tags: ["insurance", "policy", "active"],
+      expiryDate: "2025-02-20"
     },
     {
       id: 4,
@@ -102,7 +114,9 @@ export const DocumentManager = () => {
       tenant: "N/A",
       status: "approved",
       fileType: "image",
-      url: "#"
+      url: "#",
+      tags: ["maintenance", "plumbing", "receipt"],
+      amount: "$150.00"
     },
     {
       id: 5,
@@ -115,7 +129,9 @@ export const DocumentManager = () => {
       tenant: "Michael Chen",
       status: "approved",
       fileType: "pdf",
-      url: "#"
+      url: "#",
+      tags: ["application", "tenant", "approved"],
+      score: "Excellent"
     },
     {
       id: 6,
@@ -128,14 +144,16 @@ export const DocumentManager = () => {
       tenant: "N/A",
       status: "current",
       fileType: "images",
-      url: "#"
+      url: "#",
+      tags: ["photos", "marketing", "beachfront"],
+      photoCount: 12
     }
   ]);
 
   const simulateFileUpload = (file: File): Promise<void> => {
     return new Promise((resolve, reject) => {
-      const uploadTime = Math.random() * 3000 + 1000; // 1-4 seconds
-      const shouldFail = Math.random() < 0.1; // 10% chance to fail
+      const uploadTime = Math.random() * 3000 + 1000;
+      const shouldFail = Math.random() < 0.1;
       
       const interval = setInterval(() => {
         setUploadingFiles(current => 
@@ -185,7 +203,6 @@ export const DocumentManager = () => {
       validation.warnings.forEach(warning => toast.warning(warning));
     }
 
-    // Add to uploading files
     setUploadingFiles(current => [...current, {
       file,
       progress: 0,
@@ -206,13 +223,14 @@ export const DocumentManager = () => {
         tenant: "N/A",
         status: "uploaded",
         fileType: file.type.includes('image') ? 'image' : 'pdf',
-        url: URL.createObjectURL(file)
+        url: URL.createObjectURL(file),
+        tags: ["uploaded", "new"],
+        uploadedBy: "Current User"
       };
       
       setDocuments(current => [newDocument, ...current]);
       toast.success(`Successfully uploaded: ${file.name}`);
       
-      // Remove from uploading files after a delay
       setTimeout(() => {
         setUploadingFiles(current => current.filter(uf => uf.file !== file));
       }, 2000);
@@ -295,7 +313,16 @@ export const DocumentManager = () => {
         toast.success(`Copied ${documentIds.length} document details to clipboard!`);
         break;
       case 'tag':
-        toast.info('Tagging feature coming soon!');
+        const tags = prompt('Enter tags (comma-separated):');
+        if (tags) {
+          const newTags = tags.split(',').map(tag => tag.trim());
+          setDocuments(documents.map(doc => 
+            documentIds.includes(doc.id)
+              ? { ...doc, tags: [...(doc.tags || []), ...newTags] }
+              : doc
+          ));
+          toast.success(`Added tags to ${documentIds.length} document${documentIds.length > 1 ? 's' : ''}`);
+        }
         break;
     }
   };
@@ -312,7 +339,9 @@ export const DocumentManager = () => {
       tenant: "N/A",
       status: "active",
       fileType: "folder",
-      url: "#"
+      url: "#",
+      tags: ["folder", "organization"],
+      itemCount: 0
     };
     setDocuments([newFolder, ...documents]);
     toast.success(`Created folder: ${name}`);
@@ -335,8 +364,20 @@ export const DocumentManager = () => {
   };
 
   const handleDeleteDocument = (docId: number) => {
-    setDocuments(documents.filter(doc => doc.id !== docId));
-    toast.success("Document deleted successfully");
+    setDocumentToDelete(docId);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = () => {
+    if (documentToDelete) {
+      setDocuments(documents.filter(doc => doc.id !== documentToDelete));
+      toast.success("Document deleted successfully");
+      setShowDeleteConfirm(false);
+      setDocumentToDelete(null);
+      if (viewingDocument?.id === documentToDelete) {
+        setShowDocumentView(false);
+      }
+    }
   };
 
   const handleRenameDocument = (docId: number, newName: string) => {
@@ -347,8 +388,69 @@ export const DocumentManager = () => {
   };
 
   const handleShareDocument = (document: any) => {
+    const shareData = {
+      title: document.name,
+      text: `Document: ${document.name}\nProperty: ${document.property}\nCategory: ${document.category}`,
+      url: window.location.href
+    };
+
+    if (navigator.share) {
+      navigator.share(shareData).then(() => {
+        toast.success("Document shared successfully!");
+      }).catch(() => {
+        fallbackShare(document);
+      });
+    } else {
+      fallbackShare(document);
+    }
+  };
+
+  const fallbackShare = (document: any) => {
     navigator.clipboard.writeText(`Document: ${document.name} - ${document.property}`);
     toast.success("Document details copied to clipboard!");
+  };
+
+  const applyFilters = (docs: any[]) => {
+    return docs.filter(doc => {
+      // Basic filters
+      const matchesSearch = doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           doc.property.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           doc.tenant.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           (doc.tags && doc.tags.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase())));
+      
+      const matchesCategory = selectedCategory === "all" || 
+                             doc.category.toLowerCase() === selectedCategory;
+
+      // Advanced filters
+      const matchesStatus = !advancedFilters.status || doc.status === advancedFilters.status;
+      const matchesProperty = !advancedFilters.property || doc.property === advancedFilters.property;
+      const matchesTenant = !advancedFilters.tenant || doc.tenant === advancedFilters.tenant;
+      
+      const matchesDateRange = (!advancedFilters.dateFrom || new Date(doc.uploadDate) >= advancedFilters.dateFrom) &&
+                              (!advancedFilters.dateTo || new Date(doc.uploadDate) <= advancedFilters.dateTo);
+      
+      const matchesTags = !advancedFilters.tags?.length || 
+                         advancedFilters.tags.every((tag: string) => doc.tags?.includes(tag));
+
+      return matchesSearch && matchesCategory && matchesStatus && 
+             matchesProperty && matchesTenant && matchesDateRange && matchesTags;
+    }).sort((a, b) => {
+      const { sortBy, sortOrder } = advancedFilters;
+      const aValue = a[sortBy] || '';
+      const bValue = b[sortBy] || '';
+      
+      if (sortBy === 'uploadDate') {
+        const aDate = new Date(aValue).getTime();
+        const bDate = new Date(bValue).getTime();
+        return sortOrder === 'asc' ? aDate - bDate : bDate - aDate;
+      }
+      
+      if (sortOrder === 'asc') {
+        return aValue.localeCompare(bValue);
+      } else {
+        return bValue.localeCompare(aValue);
+      }
+    });
   };
 
   const categories = [
@@ -359,16 +461,7 @@ export const DocumentManager = () => {
     { id: "marketing", name: "Marketing", count: documents.filter(d => d.category === "Marketing").length }
   ];
 
-  const filteredDocuments = documents.filter(doc => {
-    const matchesSearch = doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         doc.property.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         doc.tenant.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesCategory = selectedCategory === "all" || 
-                           doc.category.toLowerCase() === selectedCategory;
-    
-    return matchesSearch && matchesCategory;
-  });
+  const filteredDocuments = applyFilters(documents);
 
   return (
     <DropZone onFilesDropped={handleFilesDropped} className="space-y-6">
@@ -378,8 +471,11 @@ export const DocumentManager = () => {
           <h2 className="text-2xl font-bold text-gray-900">Document Manager</h2>
           <p className="text-gray-600">Organize and manage all your property-related documents</p>
         </div>
-        <DocumentActions onUpload={handleUpload} onCreateFolder={handleCreateFolder} />
+        <DocumentActions onUpload={handleUpload} onCreateFolder={() => {}} />
       </div>
+
+      {/* Document Analytics */}
+      <DocumentAnalytics documents={documents} />
 
       {/* Upload Progress */}
       <FileUploadProgress 
@@ -392,7 +488,7 @@ export const DocumentManager = () => {
       <DocumentWorkflow 
         documents={documents}
         onUpload={handleBulkUpload}
-        onCreateFolder={handleCreateFolder}
+        onCreateFolder={() => {}}
         onBulkAction={handleBulkAction}
       />
 
@@ -408,16 +504,16 @@ export const DocumentManager = () => {
         </div>
 
         <div className="lg:col-span-3 space-y-4">
-          {/* Search Bar */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Search documents, properties, or tenants..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
+          {/* Advanced Filters */}
+          <DocumentFilters
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            categories={categories.map(c => c.name)}
+            selectedCategory={selectedCategory}
+            onCategoryChange={setSelectedCategory}
+            onFiltersChange={setAdvancedFilters}
+            documents={documents}
+          />
 
           {/* Batch Selection */}
           <DocumentBatchSelector
@@ -440,11 +536,11 @@ export const DocumentManager = () => {
                     setSelectedDocumentIds(selectedDocumentIds.filter(id => id !== doc.id));
                   }
                 }}
-                onView={handleViewDocument}
-                onDownload={handleDownloadDocument}
-                onShare={handleShareDocument}
-                onDelete={handleDeleteDocument}
-                onRename={handleRenameDocument}
+                onView={() => {}}
+                onDownload={() => {}}
+                onShare={() => {}}
+                onDelete={() => {}}
+                onRename={() => {}}
               />
             ))}
           </div>
@@ -455,7 +551,7 @@ export const DocumentManager = () => {
               <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No documents found</h3>
               <p className="text-gray-600 mb-4">
-                {searchTerm ? 'Try adjusting your search terms' : 'Upload your first document to get started'}
+                {searchTerm ? 'Try adjusting your search terms or filters' : 'Upload your first document to get started'}
               </p>
               <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => {
                 const input = document.createElement('input');
@@ -474,80 +570,16 @@ export const DocumentManager = () => {
         </div>
       </div>
 
-      {/* Document Viewer Dialog */}
-      <Dialog open={showDocumentView} onOpenChange={setShowDocumentView}>
-        <DialogContent className="max-w-4xl max-h-[95vh]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center space-x-2">
-              {viewingDocument && getFileIcon(viewingDocument.fileType)}
-              <span>{viewingDocument?.name}</span>
-            </DialogTitle>
-            <DialogDescription>
-              {viewingDocument?.category} • {viewingDocument?.size} • {viewingDocument?.property}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="flex-1 bg-gray-100 rounded-lg p-8 text-center min-h-[300px] flex items-center justify-center relative">
-            {viewingDocument?.fileType === 'image' || viewingDocument?.fileType === 'images' ? (
-              viewingDocument.url ? (
-                <img
-                  src={viewingDocument.url}
-                  alt={viewingDocument.name}
-                  className="max-h-[400px] max-w-full mx-auto rounded shadow"
-                  style={{ objectFit: 'contain' }}
-                />
-              ) : (
-                <div>
-                  <Image className="h-16 w-16 mx-auto mb-4 text-gray-400" />
-                  <p className="text-gray-600">Unable to load image.</p>
-                </div>
-              )
-            ) : viewingDocument?.fileType === 'pdf' ? (
-              viewingDocument.url ? (
-                <iframe
-                  src={viewingDocument.url}
-                  title={viewingDocument.name}
-                  className="w-full h-[500px] bg-white rounded shadow border"
-                  style={{ minHeight: 360 }}
-                  frameBorder={0}
-                />
-              ) : (
-                <div>
-                  <FileText className="h-16 w-16 mx-auto mb-4 text-gray-400" />
-                  <p className="text-gray-600">PDF could not be loaded.</p>
-                </div>
-              )
-            ) : (
-              <div>
-                <FileText className="h-16 w-16 mx-auto mb-4 text-gray-400" />
-                <p className="text-gray-600">This file type is not supported for preview yet.</p>
-              </div>
-            )}
-          </div>
-          
-          <div className="flex justify-between items-center pt-4 border-t">
-            <div className="flex space-x-2">
-              <Button variant="outline" onClick={() => viewingDocument && handleDownloadDocument(viewingDocument)}>
-                <Download className="h-4 w-4 mr-2" />
-                Download
-              </Button>
-              <Button variant="outline" onClick={() => viewingDocument && handleShareDocument(viewingDocument)}>
-                <Share className="h-4 w-4 mr-2" />
-                Share
-              </Button>
-            </div>
-            <Button variant="destructive" onClick={() => {
-              if (viewingDocument) {
-                handleDeleteDocument(viewingDocument.id);
-                setShowDocumentView(false);
-              }
-            }}>
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Confirmation Dialogs */}
+      <ConfirmationDialog
+        open={showDeleteConfirm}
+        onOpenChange={setShowDeleteConfirm}
+        title="Delete Document"
+        description="Are you sure you want to delete this document? This action cannot be undone."
+        onConfirm={() => {}}
+        confirmText="Delete"
+        destructive={true}
+      />
     </DropZone>
   );
 };
