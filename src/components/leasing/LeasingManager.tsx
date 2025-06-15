@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -412,7 +411,7 @@ export const LeasingManager = () => {
                         </div>
                       </div>
                       <div className="text-right">
-                        <Badge className={getLeadStatusColor(lead.status)} className="mb-2">
+                        <Badge className={getLeadStatusColor(lead.status)} style={{ marginBottom: '8px' }}>
                           {lead.status.replace('_', ' ')}
                         </Badge>
                         <div className="text-sm font-medium text-slate-700">Score: {lead.score}/100</div>

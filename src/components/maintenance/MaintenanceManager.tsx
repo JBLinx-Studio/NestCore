@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -375,7 +374,7 @@ export const MaintenanceManager = () => {
                         <p className="text-sm text-slate-500 mt-1">{order.issue}</p>
                       </div>
                       <div className="text-right">
-                        <Badge className={getPriorityColor(order.priority)} className="mb-2">
+                        <Badge className={getPriorityColor(order.priority)} style={{ marginBottom: '8px' }}>
                           {order.priority}
                         </Badge>
                         <Badge className={getStatusColor(order.status)}>
