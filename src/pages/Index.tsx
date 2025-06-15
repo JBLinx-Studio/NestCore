@@ -27,11 +27,12 @@ interface IndexProps {
 
 const Index: React.FC<IndexProps> = ({ currentUser, onSignOut }) => {
   const [activeSection, setActiveSection] = useState("dashboard");
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const renderActiveSection = () => {
     switch (activeSection) {
       case "dashboard":
-        return <DashboardOverview />;
+        return <DashboardOverview setActiveTab={setActiveSection} />;
       case "properties":
         return <PropertyManager />;
       case "tenants":
@@ -59,19 +60,21 @@ const Index: React.FC<IndexProps> = ({ currentUser, onSignOut }) => {
       case "api":
         return <ApiDashboard />;
       case "ai":
+      case "ai-assistant":
         return <AIAssistant />;
       case "matching":
         return <PropertyMatcher />;
       default:
-        return <DashboardOverview />;
+        return <DashboardOverview setActiveTab={setActiveSection} />;
     }
   };
 
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar 
-        activeSection={activeSection} 
-        setActiveSection={setActiveSection} 
+        open={sidebarOpen}
+        activeTab={activeSection} 
+        setActiveTab={setActiveSection} 
       />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header 
