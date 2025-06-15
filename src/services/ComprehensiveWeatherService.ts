@@ -1,4 +1,3 @@
-
 export interface MonthlyWeatherData {
   month: string;
   averageTemp: number;
@@ -266,7 +265,7 @@ class ComprehensiveWeatherService {
   }
 
   // Fire risk assessment
-  private async getFireRiskData(lat: lon: number, lon: number) {
+  private async getFireRiskData(lat: number, lon: number) {
     try {
       // NASA FIRMS for fire data (requires API but has free tier)
       // For now, estimate based on vegetation and climate
