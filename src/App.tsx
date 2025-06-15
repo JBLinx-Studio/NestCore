@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -20,6 +19,7 @@ import { FinancialManager } from "@/components/financial/FinancialManager";
 import { ComplianceManager } from "@/components/compliance/ComplianceManager";
 import { ReportsManager } from "@/components/reports/ReportsManager";
 import { CommunicationsManager } from "@/components/communications/CommunicationsManager";
+import { APIManager } from "@/components/api/APIManager";
 
 const queryClient = new QueryClient();
 
@@ -57,6 +57,8 @@ const App = () => {
         return <AIAssistant />;
       case "people":
         return <PeopleManager />;
+      case "api-services":
+        return <APIManager />;
       default:
         return <DashboardOverview setActiveTab={setActiveTab} />;
     }
@@ -102,6 +104,7 @@ const App = () => {
                   <Route path="/communications" element={<CommunicationsManager />} />
                   <Route path="/ai-assistant" element={<AIAssistant />} />
                   <Route path="/people" element={<PeopleManager />} />
+                  <Route path="/api-services" element={<APIManager />} />
                   <Route path="*" element={renderActiveComponent()} />
                 </Routes>
               </div>

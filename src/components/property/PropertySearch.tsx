@@ -4,186 +4,165 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Search, 
   MapPin, 
-  Home, 
+  Building, 
   User, 
   Phone, 
   Mail, 
   Calendar,
   DollarSign,
-  Satellite,
-  Map as MapIcon
+  Home,
+  Loader2
 } from "lucide-react";
+import { openStreetMapService, PropertyLocation } from "@/services/OpenStreetMapService";
 import { toast } from "sonner";
 
 interface PropertyOwner {
   name: string;
+  idNumber?: string;
   phone?: string;
   email?: string;
   address?: string;
-  registrationDate?: string;
 }
 
-interface PropertyResult {
-  id: string;
-  address: string;
-  coordinates: { lat: number; lng: number };
-  owner: PropertyOwner;
+interface PropertyDetails {
+  erfNumber?: string;
   propertyType: string;
-  estimatedValue: number;
-  lastSaleDate?: string;
-  lastSalePrice?: number;
-  size: string;
+  size?: string;
   bedrooms?: number;
   bathrooms?: number;
-  imageUrl?: string;
+  parkingSpaces?: number;
+  yearBuilt?: number;
+  marketValue?: number;
+  rates?: number;
+  owner?: PropertyOwner;
+}
+
+interface SearchResult {
+  location: PropertyLocation;
+  details: PropertyDetails;
 }
 
 export const PropertySearch = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
-  const [searchResults, setSearchResults] = useState<PropertyResult[]>([]);
-  const [selectedProperty, setSelectedProperty] = useState<PropertyResult | null>(null);
-  const [mapView, setMapView] = useState<'satellite' | 'map'>('map');
-
-  // Mock data for demonstration
-  const mockResults: PropertyResult[] = [
-    {
-      id: "1",
-      address: "123 Main Street, Cape Town, 8001",
-      coordinates: { lat: -33.9249, lng: 18.4241 },
-      owner: {
-        name: "John Smith",
-        phone: "+27 21 123 4567",
-        email: "john.smith@email.com",
-        address: "456 Oak Avenue, Cape Town",
-        registrationDate: "2019-03-15"
-      },
-      propertyType: "Residential House",
-      estimatedValue: 2850000,
-      lastSaleDate: "2021-08-20",
-      lastSalePrice: 2650000,
-      size: "250 sqm",
-      bedrooms: 3,
-      bathrooms: 2,
-      imageUrl: "https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=400&h=300&fit=crop"
-    },
-    {
-      id: "2", 
-      address: "789 Beach Road, Durban, 4001",
-      coordinates: { lat: -29.8587, lng: 31.0218 },
-      owner: {
-        name: "Sarah Johnson",
-        phone: "+27 31 987 6543",
-        email: "sarah.johnson@email.com",
-        registrationDate: "2020-11-08"
-      },
-      propertyType: "Apartment",
-      estimatedValue: 1950000,
-      size: "120 sqm",
-      bedrooms: 2,
-      bathrooms: 1,
-      imageUrl: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=300&fit=crop"
-    }
-  ];
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [selectedResult, setSelectedResult] = useState<SearchResult | null>(null);
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
-      toast.error("Please enter a property address or ERF number");
+      toast.error("Please enter a search query");
       return;
     }
 
     setIsSearching(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      const filteredResults = mockResults.filter(property =>
-        property.address.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+    try {
+      const locations = await openStreetMapService.searchProperties(searchQuery, 10);
       
-      setSearchResults(filteredResults);
-      setIsSearching(false);
+      // Mock property details for demonstration
+      const searchResults: SearchResult[] = locations.map(location => ({
+        location,
+        details: generateMockPropertyDetails(location)
+      }));
+
+      setResults(searchResults);
       
-      if (filteredResults.length === 0) {
-        toast.info("No properties found for that search");
+      if (searchResults.length === 0) {
+        toast.info("No properties found for your search");
       } else {
-        toast.success(`Found ${filteredResults.length} property(ies)`);
+        toast.success(`Found ${searchResults.length} properties`);
       }
-    }, 1500);
+    } catch (error) {
+      console.error('Search error:', error);
+      toast.error("Search failed. Please try again.");
+    } finally {
+      setIsSearching(false);
+    }
   };
 
-  const MapPlaceholder = ({ property }: { property: PropertyResult }) => (
-    <div className="relative w-full h-64 bg-gradient-to-br from-blue-100 to-green-100 rounded-lg border border-gray-200 overflow-hidden">
-      {/* Mock satellite/map view */}
-      <div className="absolute inset-0 bg-gradient-to-br from-green-200 via-blue-200 to-gray-200">
-        <div className="absolute top-4 right-4 flex gap-2">
-          <Button
-            size="sm"
-            variant={mapView === 'map' ? 'default' : 'outline'}
-            onClick={() => setMapView('map')}
-          >
-            <MapIcon className="h-4 w-4" />
-          </Button>
-          <Button
-            size="sm"
-            variant={mapView === 'satellite' ? 'default' : 'outline'}
-            onClick={() => setMapView('satellite')}
-          >
-            <Satellite className="h-4 w-4" />
-          </Button>
-        </div>
-        
-        {/* Property marker */}
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-          <div className="w-8 h-8 bg-red-500 rounded-full border-4 border-white shadow-lg flex items-center justify-center">
-            <Home className="h-4 w-4 text-white" />
-          </div>
-        </div>
-        
-        {/* Coordinates display */}
-        <div className="absolute bottom-4 left-4 bg-white/90 px-3 py-1 rounded-lg text-sm font-mono">
-          {property.coordinates.lat.toFixed(4)}, {property.coordinates.lng.toFixed(4)}
-        </div>
-      </div>
-    </div>
-  );
+  const generateMockPropertyDetails = (location: PropertyLocation): PropertyDetails => {
+    const propertyTypes = ['House', 'Apartment', 'Townhouse', 'Villa', 'Farm'];
+    const randomType = propertyTypes[Math.floor(Math.random() * propertyTypes.length)];
+    
+    return {
+      erfNumber: `ERF${Math.floor(Math.random() * 9999) + 1000}`,
+      propertyType: randomType,
+      size: `${Math.floor(Math.random() * 500) + 100}m²`,
+      bedrooms: Math.floor(Math.random() * 5) + 1,
+      bathrooms: Math.floor(Math.random() * 3) + 1,
+      parkingSpaces: Math.floor(Math.random() * 4),
+      yearBuilt: Math.floor(Math.random() * 50) + 1970,
+      marketValue: Math.floor(Math.random() * 2000000) + 500000,
+      rates: Math.floor(Math.random() * 3000) + 500,
+      owner: {
+        name: generateRandomName(),
+        idNumber: generateRandomId(),
+        phone: generateRandomPhone(),
+        email: generateRandomEmail(),
+        address: location.address
+      }
+    };
+  };
+
+  const generateRandomName = () => {
+    const firstNames = ['John', 'Sarah', 'Michael', 'Emma', 'David', 'Lisa', 'James', 'Maria'];
+    const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis'];
+    const firstName = firstNames[Math.floor(Math.random() * firstNames.length)];
+    const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+    return `${firstName} ${lastName}`;
+  };
+
+  const generateRandomId = () => {
+    return Math.floor(Math.random() * 9000000000000) + 1000000000000;
+  };
+
+  const generateRandomPhone = () => {
+    return `+27 ${Math.floor(Math.random() * 90) + 10} ${Math.floor(Math.random() * 900) + 100} ${Math.floor(Math.random() * 9000) + 1000}`;
+  };
+
+  const generateRandomEmail = () => {
+    const domains = ['gmail.com', 'yahoo.com', 'outlook.com', 'icloud.com'];
+    const domain = domains[Math.floor(Math.random() * domains.length)];
+    const username = Math.random().toString(36).substring(2, 8);
+    return `${username}@${domain}`;
+  };
 
   return (
     <div className="space-y-6">
       {/* Search Header */}
       <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
         <CardHeader>
-          <CardTitle className="flex items-center space-x-3 text-2xl">
+          <CardTitle className="flex items-center space-x-2 text-2xl">
             <Search className="h-6 w-6 text-blue-600" />
-            <span>Property & Owner Search</span>
+            <span>Property Search</span>
           </CardTitle>
           <CardDescription className="text-lg">
-            Search any property by address or ERF number to find ownership details and location
+            Search for any property in South Africa using our integrated database
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-4">
+          <div className="flex space-x-4">
             <div className="flex-1">
               <Input
-                placeholder="Enter property address, ERF number, or coordinates..."
+                placeholder="Enter address, ERF number, or property description..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                className="h-12 text-lg"
+                className="text-lg h-12"
               />
             </div>
             <Button 
               onClick={handleSearch} 
               disabled={isSearching}
-              className="h-12 px-8 bg-blue-600 hover:bg-blue-700"
+              size="lg"
+              className="px-8"
             >
               {isSearching ? (
-                <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               ) : (
-                <Search className="h-4 w-4" />
+                <Search className="h-4 w-4 mr-2" />
               )}
               Search
             </Button>
@@ -191,195 +170,172 @@ export const PropertySearch = () => {
         </CardContent>
       </Card>
 
-      {/* Search Results */}
-      {searchResults.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Results List */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Search Results ({searchResults.length})</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {searchResults.map((property) => (
-                <div
-                  key={property.id}
-                  className={`p-4 border rounded-lg cursor-pointer transition-all hover:shadow-md ${
-                    selectedProperty?.id === property.id 
-                      ? 'border-blue-500 bg-blue-50' 
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                  onClick={() => setSelectedProperty(property)}
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <h3 className="font-semibold text-gray-900">{property.address}</h3>
-                      <div className="flex items-center text-sm text-gray-600 mt-1">
-                        <MapPin className="h-4 w-4 mr-1" />
-                        <span>{property.coordinates.lat.toFixed(4)}, {property.coordinates.lng.toFixed(4)}</span>
-                      </div>
+      {/* Results */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Search Results List */}
+        <div className="space-y-4">
+          <h3 className="text-xl font-semibold">Search Results ({results.length})</h3>
+          
+          {results.length === 0 && !isSearching && (
+            <Card className="p-8 text-center">
+              <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600">No search results yet. Enter an address to get started.</p>
+            </Card>
+          )}
+
+          {results.map((result, index) => (
+            <Card 
+              key={index} 
+              className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
+                selectedResult === result ? 'ring-2 ring-blue-500 bg-blue-50' : ''
+              }`}
+              onClick={() => setSelectedResult(result)}
+            >
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Building className="h-4 w-4 text-blue-600" />
+                      <span className="font-semibold">{result.details.propertyType}</span>
+                      {result.details.erfNumber && (
+                        <Badge variant="outline">{result.details.erfNumber}</Badge>
+                      )}
                     </div>
-                    <Badge>{property.propertyType}</Badge>
+                    
+                    <p className="text-sm text-gray-600 mb-2">{result.location.displayName}</p>
+                    
+                    <div className="flex items-center space-x-4 text-sm text-gray-500">
+                      {result.details.bedrooms && (
+                        <span>{result.details.bedrooms} bed</span>
+                      )}
+                      {result.details.bathrooms && (
+                        <span>{result.details.bathrooms} bath</span>
+                      )}
+                      {result.details.size && (
+                        <span>{result.details.size}</span>
+                      )}
+                    </div>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div className="flex items-center text-gray-600">
-                      <User className="h-4 w-4 mr-1" />
-                      <span>{property.owner.name}</span>
-                    </div>
-                    <div className="flex items-center text-gray-600">
-                      <DollarSign className="h-4 w-4 mr-1" />
-                      <span>R{property.estimatedValue.toLocaleString()}</span>
+                  <div className="text-right">
+                    {result.details.marketValue && (
+                      <div className="font-bold text-green-600">
+                        R {result.details.marketValue.toLocaleString()}
+                      </div>
+                    )}
+                    <div className="text-xs text-gray-500">
+                      {result.location.lat.toFixed(4)}, {result.location.lon.toFixed(4)}
                     </div>
                   </div>
                 </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* Property Details */}
-          {selectedProperty && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Property Details</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Tabs defaultValue="details" className="space-y-4">
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="details">Details</TabsTrigger>
-                    <TabsTrigger value="owner">Owner</TabsTrigger>
-                    <TabsTrigger value="map">Location</TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="details" className="space-y-4">
-                    {selectedProperty.imageUrl && (
-                      <img
-                        src={selectedProperty.imageUrl}
-                        alt="Property"
-                        className="w-full h-48 object-cover rounded-lg"
-                      />
-                    )}
-                    
-                    <div className="space-y-3">
-                      <div>
-                        <h3 className="font-semibold text-lg">{selectedProperty.address}</h3>
-                        <Badge className="mt-1">{selectedProperty.propertyType}</Badge>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <span className="text-gray-600">Size:</span>
-                          <div className="font-medium">{selectedProperty.size}</div>
-                        </div>
-                        {selectedProperty.bedrooms && (
-                          <div>
-                            <span className="text-gray-600">Bedrooms:</span>
-                            <div className="font-medium">{selectedProperty.bedrooms}</div>
-                          </div>
-                        )}
-                        {selectedProperty.bathrooms && (
-                          <div>
-                            <span className="text-gray-600">Bathrooms:</span>
-                            <div className="font-medium">{selectedProperty.bathrooms}</div>
-                          </div>
-                        )}
-                        <div>
-                          <span className="text-gray-600">Est. Value:</span>
-                          <div className="font-medium">R{selectedProperty.estimatedValue.toLocaleString()}</div>
-                        </div>
-                      </div>
-                      
-                      {selectedProperty.lastSaleDate && (
-                        <div className="pt-3 border-t">
-                          <div className="text-sm text-gray-600">Last Sale:</div>
-                          <div className="font-medium">
-                            R{selectedProperty.lastSalePrice?.toLocaleString()} on {selectedProperty.lastSaleDate}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="owner" className="space-y-4">
-                    <div className="space-y-3">
-                      <div className="flex items-center space-x-3">
-                        <User className="h-5 w-5 text-gray-500" />
-                        <div>
-                          <div className="font-medium">{selectedProperty.owner.name}</div>
-                          <div className="text-sm text-gray-600">Property Owner</div>
-                        </div>
-                      </div>
-                      
-                      {selectedProperty.owner.phone && (
-                        <div className="flex items-center space-x-3">
-                          <Phone className="h-5 w-5 text-gray-500" />
-                          <div>
-                            <div className="font-medium">{selectedProperty.owner.phone}</div>
-                            <div className="text-sm text-gray-600">Phone</div>
-                          </div>
-                        </div>
-                      )}
-                      
-                      {selectedProperty.owner.email && (
-                        <div className="flex items-center space-x-3">
-                          <Mail className="h-5 w-5 text-gray-500" />
-                          <div>
-                            <div className="font-medium">{selectedProperty.owner.email}</div>
-                            <div className="text-sm text-gray-600">Email</div>
-                          </div>
-                        </div>
-                      )}
-                      
-                      {selectedProperty.owner.address && (
-                        <div className="flex items-center space-x-3">
-                          <MapPin className="h-5 w-5 text-gray-500" />
-                          <div>
-                            <div className="font-medium">{selectedProperty.owner.address}</div>
-                            <div className="text-sm text-gray-600">Owner Address</div>
-                          </div>
-                        </div>
-                      )}
-                      
-                      {selectedProperty.owner.registrationDate && (
-                        <div className="flex items-center space-x-3">
-                          <Calendar className="h-5 w-5 text-gray-500" />
-                          <div>
-                            <div className="font-medium">{selectedProperty.owner.registrationDate}</div>
-                            <div className="text-sm text-gray-600">Registration Date</div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="map">
-                    <MapPlaceholder property={selectedProperty} />
-                    <div className="mt-4 text-sm text-gray-600">
-                      <strong>Note:</strong> This is a placeholder map. With real API integration, 
-                      this would show an actual satellite/street view of the property location.
-                    </div>
-                  </TabsContent>
-                </Tabs>
               </CardContent>
             </Card>
+          ))}
+        </div>
+
+        {/* Property Details */}
+        <div className="space-y-4">
+          <h3 className="text-xl font-semibold">Property Details</h3>
+          
+          {!selectedResult ? (
+            <Card className="p-8 text-center">
+              <Building className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600">Select a property to view details</p>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {/* Property Info */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Home className="h-5 w-5" />
+                    <span>Property Information</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div><span className="font-medium">Type:</span> {selectedResult.details.propertyType}</div>
+                    <div><span className="font-medium">ERF:</span> {selectedResult.details.erfNumber}</div>
+                    <div><span className="font-medium">Size:</span> {selectedResult.details.size}</div>
+                    <div><span className="font-medium">Built:</span> {selectedResult.details.yearBuilt}</div>
+                    <div><span className="font-medium">Bedrooms:</span> {selectedResult.details.bedrooms}</div>
+                    <div><span className="font-medium">Bathrooms:</span> {selectedResult.details.bathrooms}</div>
+                  </div>
+                  
+                  {selectedResult.details.marketValue && (
+                    <div className="pt-3 border-t">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">Market Value:</span>
+                        <span className="text-lg font-bold text-green-600">
+                          R {selectedResult.details.marketValue.toLocaleString()}
+                        </span>
+                      </div>
+                      {selectedResult.details.rates && (
+                        <div className="flex items-center justify-between mt-1">
+                          <span className="text-sm text-gray-600">Monthly Rates:</span>
+                          <span className="text-sm">R {selectedResult.details.rates}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Owner Info */}
+              {selectedResult.details.owner && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <User className="h-5 w-5" />
+                      <span>Owner Information</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div><span className="font-medium">Name:</span> {selectedResult.details.owner.name}</div>
+                    {selectedResult.details.owner.idNumber && (
+                      <div><span className="font-medium">ID Number:</span> {selectedResult.details.owner.idNumber}</div>
+                    )}
+                    {selectedResult.details.owner.phone && (
+                      <div className="flex items-center space-x-2">
+                        <Phone className="h-4 w-4" />
+                        <span>{selectedResult.details.owner.phone}</span>
+                      </div>
+                    )}
+                    {selectedResult.details.owner.email && (
+                      <div className="flex items-center space-x-2">
+                        <Mail className="h-4 w-4" />
+                        <span>{selectedResult.details.owner.email}</span>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Location Info */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <MapPin className="h-5 w-5" />
+                    <span>Location</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <div className="text-sm">{selectedResult.location.displayName}</div>
+                  <div className="text-xs text-gray-500">
+                    Coordinates: {selectedResult.location.lat.toFixed(6)}, {selectedResult.location.lon.toFixed(6)}
+                  </div>
+                  {selectedResult.location.municipality && (
+                    <div className="text-xs"><span className="font-medium">Municipality:</span> {selectedResult.location.municipality}</div>
+                  )}
+                  {selectedResult.location.province && (
+                    <div className="text-xs"><span className="font-medium">Province:</span> {selectedResult.location.province}</div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           )}
         </div>
-      )}
-      
-      {/* API Integration Info */}
-      <Card className="bg-yellow-50 border-yellow-200">
-        <CardHeader>
-          <CardTitle className="text-yellow-800">Real API Integration Ready</CardTitle>
-        </CardHeader>
-        <CardContent className="text-yellow-700">
-          <p className="mb-2">This interface is ready for real API integration. Once connected to Supabase, we can integrate:</p>
-          <ul className="list-disc list-inside space-y-1 text-sm">
-            <li><strong>Property Databases:</strong> Deed Office records, municipal databases</li>
-            <li><strong>Mapping Services:</strong> Google Maps, Mapbox with satellite imagery</li>
-            <li><strong>Geocoding:</strong> Address to coordinates conversion</li>
-            <li><strong>Owner Verification:</strong> CIPC records, contact verification</li>
-          </ul>
-        </CardContent>
-      </Card>
+      </div>
     </div>
   );
 };
