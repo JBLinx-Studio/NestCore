@@ -1,183 +1,243 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { 
-  Calculator, 
-  MapPin, 
-  Building, 
-  Plus, 
-  Trash2, 
-  Download,
-  FileText,
-  Search,
-  TrendingUp,
-  Eye,
-  Edit,
-  Save,
-  Sparkles,
-  BarChart3,
-  Target,
-  DollarSign
-} from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Calculator, MapPin, TrendingUp, Building, FileText, Download, Zap, Target, BarChart3, Clock, Users, DollarSign, AlertCircle, CheckCircle, Star, Award } from "lucide-react";
 import { toast } from "sonner";
-
-interface ComparableProperty {
-  id: number;
-  address: string;
-  salePrice: number;
-  saleDate: string;
-  size: number;
-  type: string;
-  condition: string;
-}
 
 export const CMAWorkspace = () => {
   const [subjectProperty, setSubjectProperty] = useState({
     address: "Berg Street, Bothasrus",
-    size: 112,
-    type: "Residence",
+    scheme: "468/1993",
+    section: "4",
+    extent: "112",
+    bedrooms: "2",
+    bathrooms: "2",
+    parking: "1",
+    propertyType: "Sectional Title",
     condition: "Good",
-    bedrooms: 3,
-    bathrooms: 2,
-    parking: 2
+    specialFeatures: "Mountain views, modern kitchen",
+    marketingPeriod: "60"
   });
 
-  const [comparableProperties, setComparableProperties] = useState<ComparableProperty[]>([
+  const [marketData, setMarketData] = useState({
+    searchRadius: "1000",
+    timeFrame: "12",
+    minPrice: "500000",
+    maxPrice: "800000",
+    propertyTypes: ["Sectional Title", "Freehold"],
+    includeActiveListings: true,
+    includeSoldProperties: true
+  });
+
+  const [comparables, setComparables] = useState([
     {
       id: 1,
-      address: "Lemmerville, 4 Cloete Street Bothasrus",
-      salePrice: 660000,
-      saleDate: "2024-06-27",
-      size: 80,
-      type: "Residence",
-      condition: "Good"
+      address: "Cloete Street, Bothasrus",
+      price: 695000,
+      pricePerSqm: 6205,
+      bedrooms: 2,
+      bathrooms: 2,
+      extent: 112,
+      saleDate: "2024-11-15",
+      daysOnMarket: 45,
+      condition: "Excellent",
+      adjustments: {
+        condition: 15000,
+        view: -5000,
+        parking: 0,
+        total: 10000
+      },
+      adjustedPrice: 705000,
+      weight: 0.3,
+      selected: true
     },
     {
       id: 2,
-      address: "Lemmerville, 4 Cloete Street Bothasrus", 
-      salePrice: 850000,
-      saleDate: "2023-08-15",
-      size: 127,
-      type: "Residence",
-      condition: "Good"
+      address: "Albany Road, Bothasrus",
+      price: 620000,
+      pricePerSqm: 5536,
+      bedrooms: 2,
+      bathrooms: 1,
+      extent: 112,
+      saleDate: "2024-10-28",
+      daysOnMarket: 38,
+      condition: "Good",
+      adjustments: {
+        condition: 0,
+        view: 8000,
+        parking: 15000,
+        total: 23000
+      },
+      adjustedPrice: 643000,
+      weight: 0.25,
+      selected: true
     },
     {
       id: 3,
-      address: "Lemmerville, 4 Cloete Street Bothasrus",
-      salePrice: 670000,
-      saleDate: "2022-08-19",
-      size: 55,
-      type: "Residence",
-      condition: "Average"
+      address: "Mill Park, Bothasrus",
+      price: 685000,
+      pricePerSqm: 6116,
+      bedrooms: 2,
+      bathrooms: 2,
+      extent: 112,
+      saleDate: "2024-12-01",
+      daysOnMarket: 52,
+      condition: "Average",
+      adjustments: {
+        condition: 25000,
+        view: -3000,
+        parking: 0,
+        total: 22000
+      },
+      adjustedPrice: 707000,
+      weight: 0.25,
+      selected: true
+    },
+    {
+      id: 4,
+      address: "Mountain View, Bothasrus",
+      price: 750000,
+      pricePerSqm: 6696,
+      bedrooms: 3,
+      bathrooms: 2,
+      extent: 112,
+      saleDate: "2024-11-20",
+      daysOnMarket: 29,
+      condition: "Excellent",
+      adjustments: {
+        condition: 5000,
+        view: 0,
+        parking: -10000,
+        total: -5000
+      },
+      adjustedPrice: 745000,
+      weight: 0.2,
+      selected: false
     }
   ]);
 
   const [cmaResults, setCmaResults] = useState({
-    lowerRange: 617000,
-    middleRange: 664000,
-    upperRange: 756000,
+    lowValue: 643000,
+    highValue: 745000,
     recommendedValue: 664000,
-    confidence: 85
+    confidence: 85,
+    marketTrend: "Stable",
+    averageDaysOnMarket: 41,
+    pricePerSqm: 5929
   });
 
-  const addComparable = () => {
-    const newComparable: ComparableProperty = {
-      id: Date.now(),
-      address: "",
-      salePrice: 0,
-      saleDate: new Date().toISOString().split('T')[0],
-      size: 0,
-      type: "Residence",
-      condition: "Good"
-    };
-    setComparableProperties([...comparableProperties, newComparable]);
+  const [analysisProgress, setAnalysisProgress] = useState(0);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  const runCMAAnalysis = () => {
+    setIsAnalyzing(true);
+    setAnalysisProgress(0);
+    
+    const interval = setInterval(() => {
+      setAnalysisProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setIsAnalyzing(false);
+          toast.success("CMA analysis completed with 85% confidence rating!");
+          return 100;
+        }
+        return prev + 12.5;
+      });
+    }, 300);
+
+    // Simulate calculation with weighted adjustments
+    const selectedComps = comparables.filter(comp => comp.selected);
+    const weightedAverage = selectedComps.reduce((sum, comp) => 
+      sum + (comp.adjustedPrice * comp.weight), 0
+    ) / selectedComps.reduce((sum, comp) => sum + comp.weight, 0);
+    
+    setTimeout(() => {
+      setCmaResults({
+        ...cmaResults,
+        recommendedValue: Math.round(weightedAverage),
+        confidence: Math.round(85 + Math.random() * 10)
+      });
+    }, 2400);
   };
 
-  const removeComparable = (id: number) => {
-    setComparableProperties(comparableProperties.filter(comp => comp.id !== id));
-  };
-
-  const updateComparable = (id: number, field: string, value: any) => {
-    setComparableProperties(comparableProperties.map(comp => 
-      comp.id === id ? { ...comp, [field]: value } : comp
+  const toggleComparable = (id: number) => {
+    setComparables(comparables.map(comp => 
+      comp.id === id ? { ...comp, selected: !comp.selected } : comp
     ));
   };
 
-  const calculateCMA = () => {
-    if (comparableProperties.length === 0) {
-      toast.error("Please add at least one comparable property");
-      return;
-    }
-
-    const pricesPerSqm = comparableProperties.map(comp => comp.salePrice / comp.size);
-    const avgPricePerSqm = pricesPerSqm.reduce((sum, price) => sum + price, 0) / pricesPerSqm.length;
-    
-    const estimatedValue = avgPricePerSqm * subjectProperty.size;
-    const variance = 0.15;
-    
-    const newResults = {
-      lowerRange: Math.round(estimatedValue * (1 - variance)),
-      middleRange: Math.round(estimatedValue),
-      upperRange: Math.round(estimatedValue * (1 + variance)),
-      recommendedValue: Math.round(estimatedValue),
-      confidence: Math.min(95, 70 + (comparableProperties.length * 5))
-    };
-
-    setCmaResults(newResults);
-    toast.success("CMA calculation completed with high accuracy!");
+  const updateAdjustment = (id: number, type: string, value: number) => {
+    setComparables(comparables.map(comp => {
+      if (comp.id === id) {
+        const newAdjustments = { ...comp.adjustments, [type]: value };
+        const total = Object.values(newAdjustments).reduce((sum: number, val) => 
+          typeof val === 'number' ? sum + val : sum, 0
+        ) - (newAdjustments.total || 0);
+        return {
+          ...comp,
+          adjustments: { ...newAdjustments, total },
+          adjustedPrice: comp.price + total
+        };
+      }
+      return comp;
+    }));
   };
 
-  const generateReport = () => {
-    toast.success("Generating comprehensive CMA report...");
+  const generateCMAReport = () => {
+    toast.success("Generating professional CMA report with comparable analysis...");
   };
+
+  const selectedComps = comparables.filter(comp => comp.selected);
 
   return (
     <div className="space-y-8">
       {/* Enhanced Header */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-white via-blue-50/30 to-cyan-50/20 border border-slate-200/60 rounded-2xl shadow-lg shadow-slate-200/50">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(59,130,246,0.08),transparent_50%)]"></div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(6,182,212,0.06),transparent_50%)]"></div>
-        <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-cyan-100/40 to-transparent rounded-full -translate-y-20 translate-x-20"></div>
+      <div className="relative overflow-hidden bg-white border border-slate-200/60 rounded-2xl shadow-lg shadow-slate-200/50">
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-50/50 via-blue-50/30 to-purple-50/20"></div>
+        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-blue-100/30 to-transparent rounded-full -translate-y-16 translate-x-16"></div>
         
         <div className="relative p-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-6">
               <div className="relative">
-                <div className="w-18 h-18 bg-gradient-to-br from-blue-600 via-blue-700 to-cyan-600 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-600/25 rotate-2 hover:rotate-0 transition-transform duration-300">
-                  <Calculator className="h-9 w-9 text-white" />
+                <div className="w-16 h-16 bg-gradient-to-br from-slate-100 to-slate-50 border border-slate-200/50 rounded-xl flex items-center justify-center shadow-lg shadow-slate-300/20">
+                  <Calculator className="h-8 w-8 text-slate-700" />
                 </div>
-                <div className="absolute -top-2 -right-2 w-7 h-7 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-full border-2 border-white flex items-center justify-center shadow-lg">
-                  <BarChart3 className="h-3 w-3 text-white" />
+                <div className="absolute -top-1 -right-1 w-6 h-6 bg-blue-500 rounded-full border-2 border-white flex items-center justify-center shadow-md">
+                  <Target className="h-3 w-3 text-white" />
                 </div>
               </div>
               <div>
-                <h2 className="text-3xl font-bold bg-gradient-to-r from-slate-900 via-blue-800 to-cyan-700 bg-clip-text text-transparent mb-2">
+                <h2 className="text-2xl font-bold text-slate-900 mb-1">
                   Comparative Market Analysis
                 </h2>
-                <p className="text-slate-600 text-lg font-medium">Professional CMA tools with advanced analytics</p>
-                <div className="flex gap-3 mt-3">
-                  <Badge className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 transition-colors px-3 py-1">
-                    <Target className="h-3 w-3 mr-1" />
-                    Precision Analysis
+                <p className="text-slate-600 font-medium">Professional property valuation with comparable sales analysis</p>
+                <div className="flex gap-2 mt-3">
+                  <Badge className="bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 transition-colors">
+                    <Award className="h-3 w-3 mr-1" />
+                    Certified Analysis
                   </Badge>
-                  <Badge className="bg-cyan-50 text-cyan-700 border-cyan-200 hover:bg-cyan-100 transition-colors px-3 py-1">
-                    <Sparkles className="h-3 w-3 mr-1" />
+                  <Badge className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 transition-colors">
+                    <Star className="h-3 w-3 mr-1" />
                     Market Intelligence
                   </Badge>
                 </div>
               </div>
             </div>
             <div className="text-right">
-              <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+              <div className="text-2xl font-bold text-slate-900">
                 R {cmaResults.recommendedValue.toLocaleString()}
               </div>
-              <div className="text-sm text-slate-600 font-medium">Estimated Value</div>
-              <Badge className="mt-2 bg-blue-50 text-blue-700 border-blue-200 px-3 py-1">
-                <Sparkles className="h-3 w-3 mr-1" />
+              <div className="text-sm text-slate-600">Recommended Value</div>
+              <Badge className="mt-2 bg-green-50 text-green-700 border-green-200">
                 {cmaResults.confidence}% Confidence
               </Badge>
             </div>
@@ -185,286 +245,337 @@ export const CMAWorkspace = () => {
         </div>
       </div>
 
-      {/* Enhanced Subject Property */}
+      {/* Subject Property Details */}
       <Card className="bg-white border border-slate-200/60 shadow-lg shadow-slate-200/50">
         <CardHeader className="bg-gradient-to-r from-slate-50/80 to-blue-50/30 border-b border-slate-200/50">
-          <CardTitle className="flex items-center space-x-3 text-xl font-bold">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Building className="h-5 w-5 text-blue-700" />
+          <CardTitle className="flex items-center space-x-3">
+            <div className="p-2 bg-slate-100 rounded-lg border border-slate-200/50">
+              <Building className="h-5 w-5 text-slate-700" />
             </div>
-            <span className="text-slate-900">Subject Property</span>
+            <span className="text-slate-900">Subject Property Details</span>
           </CardTitle>
-          <CardDescription className="text-slate-600 font-medium">Property being evaluated for market value</CardDescription>
+          <CardDescription className="text-slate-600">Property information for comparative analysis</CardDescription>
         </CardHeader>
-        <CardContent className="p-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <CardContent className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="lg:col-span-2">
-              <Label htmlFor="address" className="text-sm font-semibold text-slate-700 mb-2 block">Property Address</Label>
+              <Label htmlFor="address" className="text-sm font-medium text-slate-700">Property Address</Label>
               <Input
                 id="address"
                 value={subjectProperty.address}
                 onChange={(e) => setSubjectProperty({...subjectProperty, address: e.target.value})}
-                className="border-slate-200 focus:border-blue-400 focus:ring-blue-200 shadow-sm"
+                className="mt-1 border-slate-200 focus:border-blue-400 focus:ring-blue-200"
               />
             </div>
             <div>
-              <Label htmlFor="size" className="text-sm font-semibold text-slate-700 mb-2 block">Size (m²)</Label>
+              <Label className="text-sm font-medium text-slate-700">Extent (m²)</Label>
               <Input
-                id="size"
-                type="number"
-                value={subjectProperty.size}
-                onChange={(e) => setSubjectProperty({...subjectProperty, size: Number(e.target.value)})}
-                className="border-slate-200 focus:border-blue-400 focus:ring-blue-200 shadow-sm"
+                value={subjectProperty.extent}
+                onChange={(e) => setSubjectProperty({...subjectProperty, extent: e.target.value})}
+                className="mt-1 border-slate-200 focus:border-blue-400 focus:ring-blue-200"
               />
             </div>
             <div>
-              <Label htmlFor="bedrooms" className="text-sm font-semibold text-slate-700 mb-2 block">Bedrooms</Label>
+              <Label className="text-sm font-medium text-slate-700">Property Type</Label>
+              <Select value={subjectProperty.propertyType} onValueChange={(value) => setSubjectProperty({...subjectProperty, propertyType: value})}>
+                <SelectTrigger className="mt-1 border-slate-200 focus:border-blue-400">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Sectional Title">Sectional Title</SelectItem>
+                  <SelectItem value="Freehold">Freehold</SelectItem>
+                  <SelectItem value="Townhouse">Townhouse</SelectItem>
+                  <SelectItem value="Apartment">Apartment</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-sm font-medium text-slate-700">Bedrooms</Label>
               <Input
-                id="bedrooms"
-                type="number"
                 value={subjectProperty.bedrooms}
-                onChange={(e) => setSubjectProperty({...subjectProperty, bedrooms: Number(e.target.value)})}
-                className="border-slate-200 focus:border-blue-400 focus:ring-blue-200 shadow-sm"
+                onChange={(e) => setSubjectProperty({...subjectProperty, bedrooms: e.target.value})}
+                className="mt-1 border-slate-200 focus:border-blue-400 focus:ring-blue-200"
               />
             </div>
             <div>
-              <Label htmlFor="bathrooms" className="text-sm font-semibold text-slate-700 mb-2 block">Bathrooms</Label>
+              <Label className="text-sm font-medium text-slate-700">Bathrooms</Label>
               <Input
-                id="bathrooms"
-                type="number"
                 value={subjectProperty.bathrooms}
-                onChange={(e) => setSubjectProperty({...subjectProperty, bathrooms: Number(e.target.value)})}
-                className="border-slate-200 focus:border-blue-400 focus:ring-blue-200 shadow-sm"
+                onChange={(e) => setSubjectProperty({...subjectProperty, bathrooms: e.target.value})}
+                className="mt-1 border-slate-200 focus:border-blue-400 focus:ring-blue-200"
               />
             </div>
             <div>
-              <Label htmlFor="parking" className="text-sm font-semibold text-slate-700 mb-2 block">Parking Spaces</Label>
+              <Label className="text-sm font-medium text-slate-700">Parking</Label>
               <Input
-                id="parking"
-                type="number"
                 value={subjectProperty.parking}
-                onChange={(e) => setSubjectProperty({...subjectProperty, parking: Number(e.target.value)})}
-                className="border-slate-200 focus:border-blue-400 focus:ring-blue-200 shadow-sm"
+                onChange={(e) => setSubjectProperty({...subjectProperty, parking: e.target.value})}
+                className="mt-1 border-slate-200 focus:border-blue-400 focus:ring-blue-200"
+              />
+            </div>
+            <div>
+              <Label className="text-sm font-medium text-slate-700">Condition</Label>
+              <Select value={subjectProperty.condition} onValueChange={(value) => setSubjectProperty({...subjectProperty, condition: value})}>
+                <SelectTrigger className="mt-1 border-slate-200 focus:border-blue-400">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Excellent">Excellent</SelectItem>
+                  <SelectItem value="Good">Good</SelectItem>
+                  <SelectItem value="Average">Average</SelectItem>
+                  <SelectItem value="Poor">Poor</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="mt-4">
+            <Label className="text-sm font-medium text-slate-700">Special Features</Label>
+            <Textarea
+              value={subjectProperty.specialFeatures}
+              onChange={(e) => setSubjectProperty({...subjectProperty, specialFeatures: e.target.value})}
+              className="mt-1 border-slate-200 focus:border-blue-400 focus:ring-blue-200"
+              rows={2}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Market Search Parameters */}
+      <Card className="bg-white border border-slate-200/60 shadow-lg shadow-slate-200/50">
+        <CardHeader className="bg-gradient-to-r from-slate-50/80 to-purple-50/30 border-b border-slate-200/50">
+          <CardTitle className="flex items-center space-x-3">
+            <div className="p-2 bg-slate-100 rounded-lg border border-slate-200/50">
+              <MapPin className="h-5 w-5 text-slate-700" />
+            </div>
+            <span className="text-slate-900">Market Search Parameters</span>
+          </CardTitle>
+          <CardDescription className="text-slate-600">Define criteria for comparable property search</CardDescription>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <Label className="text-sm font-medium text-slate-700">Search Radius (m)</Label>
+              <Input
+                type="number"
+                value={marketData.searchRadius}
+                onChange={(e) => setMarketData({...marketData, searchRadius: e.target.value})}
+                className="mt-1 border-slate-200 focus:border-purple-400 focus:ring-purple-200"
+              />
+            </div>
+            <div>
+              <Label className="text-sm font-medium text-slate-700">Time Frame (months)</Label>
+              <Input
+                type="number"
+                value={marketData.timeFrame}
+                onChange={(e) => setMarketData({...marketData, timeFrame: e.target.value})}
+                className="mt-1 border-slate-200 focus:border-purple-400 focus:ring-purple-200"
+              />
+            </div>
+            <div>
+              <Label className="text-sm font-medium text-slate-700">Min Price (R)</Label>
+              <Input
+                type="number"
+                value={marketData.minPrice}
+                onChange={(e) => setMarketData({...marketData, minPrice: e.target.value})}
+                className="mt-1 border-slate-200 focus:border-purple-400 focus:ring-purple-200"
+              />
+            </div>
+            <div>
+              <Label className="text-sm font-medium text-slate-700">Max Price (R)</Label>
+              <Input
+                type="number"
+                value={marketData.maxPrice}
+                onChange={(e) => setMarketData({...marketData, maxPrice: e.target.value})}
+                className="mt-1 border-slate-200 focus:border-purple-400 focus:ring-purple-200"
               />
             </div>
           </div>
-          
-          <div className="mt-6 p-6 bg-gradient-to-r from-blue-50/70 to-cyan-50/70 rounded-xl border border-blue-100/50 shadow-sm">
-            <div className="flex items-center space-x-4">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Eye className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <div className="font-semibold text-blue-900 text-base">Property Summary</div>
-                <div className="text-sm text-blue-700 font-medium">
-                  {subjectProperty.bedrooms} bed, {subjectProperty.bathrooms} bath residence • {subjectProperty.size}m² • {subjectProperty.parking} parking
-                </div>
-              </div>
+          <div className="mt-4 flex items-center space-x-6">
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={marketData.includeActiveListings}
+                onCheckedChange={(checked) => setMarketData({...marketData, includeActiveListings: checked})}
+              />
+              <Label className="text-sm font-medium text-slate-700">Include Active Listings</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch
+                checked={marketData.includeSoldProperties}
+                onCheckedChange={(checked) => setMarketData({...marketData, includeSoldProperties: checked})}
+              />
+              <Label className="text-sm font-medium text-slate-700">Include Sold Properties</Label>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Enhanced CMA Results */}
+      {/* CMA Analysis */}
       <Card className="bg-white border border-slate-200/60 shadow-lg shadow-slate-200/50">
         <CardHeader className="bg-gradient-to-r from-slate-50/80 to-green-50/30 border-b border-slate-200/50">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="flex items-center space-x-3 text-xl font-bold">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <Calculator className="h-5 w-5 text-green-700" />
+              <CardTitle className="flex items-center space-x-3">
+                <div className="p-2 bg-slate-100 rounded-lg border border-slate-200/50">
+                  <Zap className="h-5 w-5 text-slate-700" />
                 </div>
-                <span className="text-slate-900">CMA Valuation Results</span>
+                <span className="text-slate-900">CMA Analysis Engine</span>
               </CardTitle>
-              <CardDescription className="text-slate-600 font-medium">Professional market value assessment</CardDescription>
+              <CardDescription className="text-slate-600">Advanced comparative analysis with weighted adjustments</CardDescription>
             </div>
-            <div className="flex space-x-3">
-              <Button onClick={calculateCMA} className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transition-all duration-200">
-                <Calculator className="h-4 w-4 mr-2" />
-                Calculate CMA
-              </Button>
-              <Button onClick={generateReport} variant="outline" className="border-slate-200 hover:bg-slate-50 shadow-sm">
-                <Download className="h-4 w-4 mr-2" />
-                Generate Report
-              </Button>
-            </div>
+            <Button 
+              onClick={runCMAAnalysis} 
+              disabled={isAnalyzing}
+              className="bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white shadow-lg"
+            >
+              <Calculator className="h-4 w-4 mr-2" />
+              {isAnalyzing ? "Analyzing..." : "Run Analysis"}
+            </Button>
           </div>
         </CardHeader>
-        <CardContent className="p-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Card className="border border-red-100 bg-gradient-to-br from-red-50/80 to-red-50/40 shadow-md hover:shadow-lg transition-shadow duration-200">
-              <CardContent className="pt-6">
-                <div className="text-center">
-                  <div className="p-3 bg-red-100 rounded-xl inline-flex mb-3">
-                    <TrendingUp className="h-6 w-6 text-red-600" />
-                  </div>
-                  <div className="text-2xl font-bold text-red-600 mb-2">
-                    R {cmaResults.lowerRange.toLocaleString()}
-                  </div>
-                  <div className="text-sm font-semibold text-red-700 mb-1">Lower Range</div>
-                  <div className="text-xs text-red-600">Conservative Estimate</div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="border border-blue-100 bg-gradient-to-br from-blue-50/80 to-blue-50/40 shadow-md hover:shadow-lg transition-shadow duration-200">
-              <CardContent className="pt-6">
-                <div className="text-center">
-                  <div className="p-3 bg-blue-100 rounded-xl inline-flex mb-3">
-                    <Target className="h-6 w-6 text-blue-600" />
-                  </div>
-                  <div className="text-2xl font-bold text-blue-600 mb-2">
-                    R {cmaResults.middleRange.toLocaleString()}
-                  </div>
-                  <div className="text-sm font-semibold text-blue-700 mb-1">Market Value</div>
-                  <div className="text-xs text-blue-600">Most Likely Price</div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="border border-green-100 bg-gradient-to-br from-green-50/80 to-green-50/40 shadow-md hover:shadow-lg transition-shadow duration-200">
-              <CardContent className="pt-6">
-                <div className="text-center">
-                  <div className="p-3 bg-green-100 rounded-xl inline-flex mb-3">
-                    <TrendingUp className="h-6 w-6 text-green-600" />
-                  </div>
-                  <div className="text-2xl font-bold text-green-600 mb-2">
-                    R {cmaResults.upperRange.toLocaleString()}
-                  </div>
-                  <div className="text-sm font-semibold text-green-700 mb-1">Upper Range</div>
-                  <div className="text-xs text-green-600">Optimistic Estimate</div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="border border-purple-100 bg-gradient-to-br from-purple-50/80 to-purple-50/40 shadow-md hover:shadow-lg transition-shadow duration-200">
-              <CardContent className="pt-6">
-                <div className="text-center">
-                  <div className="p-3 bg-purple-100 rounded-xl inline-flex mb-3">
-                    <Sparkles className="h-6 w-6 text-purple-600" />
-                  </div>
-                  <div className="text-2xl font-bold text-purple-600 mb-2">
-                    R {cmaResults.recommendedValue.toLocaleString()}
-                  </div>
-                  <div className="text-sm font-semibold text-purple-700 mb-1">Recommended</div>
-                  <div className="text-xs text-purple-600">Professional Opinion</div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-          
-          <div className="bg-gradient-to-r from-green-50/80 to-emerald-50/60 p-6 rounded-xl border border-green-100/60 shadow-sm">
-            <div className="flex items-start space-x-4">
-              <div className="p-3 bg-green-100 rounded-xl">
-                <FileText className="h-6 w-6 text-green-600" />
+        <CardContent className="p-6">
+          {isAnalyzing && (
+            <div className="mb-6 p-4 bg-blue-50 rounded-xl border border-blue-100">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-blue-700">Analyzing comparable properties...</span>
+                <span className="text-sm text-blue-600">{analysisProgress}%</span>
               </div>
-              <div className="flex-1">
-                <div className="font-bold text-green-900 text-lg mb-2">Professional CMA Summary</div>
-                <div className="text-green-800 leading-relaxed font-medium">
-                  Based on analysis of <strong>{comparableProperties.length} comparable properties</strong> in the Bothasrus area, 
-                  the estimated market value for <strong>{subjectProperty.address}</strong> ({subjectProperty.size}m²) 
-                  is <strong>R {cmaResults.recommendedValue.toLocaleString()}</strong> with 
-                  a confidence level of <strong>{cmaResults.confidence}%</strong>. This valuation reflects current 
-                  market conditions and property characteristics.
-                </div>
-                <div className="mt-4 flex items-center space-x-4">
-                  <Badge className="bg-green-100 text-green-700 border-green-200 font-medium px-3 py-1">High Confidence</Badge>
-                  <Badge variant="outline" className="border-green-200 text-green-700 font-medium px-3 py-1">Market Aligned</Badge>
-                  <span className="text-sm text-green-700 flex items-center font-medium">
-                    <TrendingUp className="h-4 w-4 mr-1" />
-                    Based on recent sales data
-                  </span>
-                </div>
-              </div>
+              <Progress value={analysisProgress} className="h-2 bg-blue-100" />
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="text-center p-4 bg-slate-50 rounded-xl border border-slate-200/50">
+              <div className="text-xl font-bold text-slate-900">R {cmaResults.lowValue.toLocaleString()}</div>
+              <div className="text-sm text-slate-600">Low Range</div>
+            </div>
+            <div className="text-center p-4 bg-green-50 rounded-xl border border-green-200/50">
+              <div className="text-xl font-bold text-green-700">R {cmaResults.recommendedValue.toLocaleString()}</div>
+              <div className="text-sm text-green-600">Recommended</div>
+            </div>
+            <div className="text-center p-4 bg-slate-50 rounded-xl border border-slate-200/50">
+              <div className="text-xl font-bold text-slate-900">R {cmaResults.highValue.toLocaleString()}</div>
+              <div className="text-sm text-slate-600">High Range</div>
+            </div>
+            <div className="text-center p-4 bg-blue-50 rounded-xl border border-blue-200/50">
+              <div className="text-xl font-bold text-blue-700">{cmaResults.confidence}%</div>
+              <div className="text-sm text-blue-600">Confidence</div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Enhanced Comparable Properties */}
+      {/* Comparable Properties */}
       <Card className="bg-white border border-slate-200/60 shadow-lg shadow-slate-200/50">
         <CardHeader className="bg-gradient-to-r from-slate-50/80 to-orange-50/30 border-b border-slate-200/50">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center space-x-3 text-xl font-bold">
-                <div className="p-2 bg-orange-100 rounded-lg">
-                  <MapPin className="h-5 w-5 text-orange-700" />
-                </div>
-                <span className="text-slate-900">Comparable Properties</span>
-              </CardTitle>
-              <CardDescription className="text-slate-600 font-medium">Recent sales used for market comparison</CardDescription>
+          <CardTitle className="flex items-center space-x-3">
+            <div className="p-2 bg-slate-100 rounded-lg border border-slate-200/50">
+              <BarChart3 className="h-5 w-5 text-slate-700" />
             </div>
-            <Button onClick={addComparable} variant="outline" size="sm" className="border-slate-200 hover:bg-slate-50 shadow-sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Comparable
-            </Button>
-          </div>
+            <span className="text-slate-900">Comparable Properties ({selectedComps.length} selected)</span>
+          </CardTitle>
+          <CardDescription className="text-slate-600">Review and adjust comparable property data</CardDescription>
         </CardHeader>
-        <CardContent className="p-8">
-          <div className="space-y-6">
-            {comparableProperties.map((comp, index) => (
-              <div key={comp.id} className="p-6 border border-slate-100 rounded-xl bg-gradient-to-br from-slate-50/30 to-white hover:from-slate-50/50 hover:to-slate-50/10 transition-all duration-200 shadow-sm hover:shadow-md">
-                <div className="flex items-center justify-between mb-4">
+        <CardContent className="p-6">
+          <div className="space-y-4">
+            {comparables.map((comp) => (
+              <div key={comp.id} className={`p-6 rounded-xl border transition-all duration-200 ${
+                comp.selected 
+                  ? "border-green-200 bg-green-50/50 shadow-md" 
+                  : "border-slate-200 bg-slate-50/30 hover:bg-slate-50"
+              }`}>
+                <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <Building className="h-4 w-4 text-blue-600" />
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={comp.selected}
+                        onChange={() => toggleComparable(comp.id)}
+                        className="w-4 h-4 text-green-600 rounded border-slate-300"
+                      />
                     </div>
-                    <span className="text-base font-bold text-slate-700">Comparable #{index + 1}</span>
+                    <div>
+                      <div className="font-semibold text-slate-900">{comp.address}</div>
+                      <div className="text-sm text-slate-600">
+                        {comp.bedrooms} bed • {comp.bathrooms} bath • {comp.extent}m² • {comp.condition}
+                      </div>
+                    </div>
                   </div>
-                  <Button onClick={() => removeComparable(comp.id)} variant="ghost" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                  <div className="lg:col-span-2">
-                    <Label className="text-sm font-semibold text-slate-600 mb-2 block">Address</Label>
-                    <Input
-                      value={comp.address}
-                      onChange={(e) => updateComparable(comp.id, 'address', e.target.value)}
-                      className="border-slate-200 focus:border-blue-400 focus:ring-blue-200 shadow-sm"
-                      placeholder="Property address"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-sm font-semibold text-slate-600 mb-2 block">Sale Price (R)</Label>
-                    <Input
-                      type="number"
-                      value={comp.salePrice}
-                      onChange={(e) => updateComparable(comp.id, 'salePrice', Number(e.target.value))}
-                      className="border-slate-200 focus:border-blue-400 focus:ring-blue-200 shadow-sm"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-sm font-semibold text-slate-600 mb-2 block">Sale Date</Label>
-                    <Input
-                      type="date"
-                      value={comp.saleDate}
-                      onChange={(e) => updateComparable(comp.id, 'saleDate', e.target.value)}
-                      className="border-slate-200 focus:border-blue-400 focus:ring-blue-200 shadow-sm"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-sm font-semibold text-slate-600 mb-2 block">Size (m²)</Label>
-                    <Input
-                      type="number"
-                      value={comp.size}
-                      onChange={(e) => updateComparable(comp.id, 'size', Number(e.target.value))}
-                      className="border-slate-200 focus:border-blue-400 focus:ring-blue-200 shadow-sm"
-                    />
+                  <div className="text-right">
+                    <div className="font-bold text-lg text-slate-900">R {comp.price.toLocaleString()}</div>
+                    <div className="text-sm text-slate-600">R {comp.pricePerSqm.toLocaleString()}/m²</div>
+                    <Badge variant="outline" className="mt-1">
+                      <Clock className="h-3 w-3 mr-1" />
+                      {comp.daysOnMarket} days
+                    </Badge>
                   </div>
                 </div>
-                {comp.salePrice > 0 && comp.size > 0 && (
-                  <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
-                    <div className="flex items-center space-x-2">
-                      <DollarSign className="h-4 w-4 text-blue-600" />
-                      <span className="text-sm font-semibold text-blue-700">
-                        Price per m²: R {Math.round(comp.salePrice / comp.size).toLocaleString()}
-                      </span>
+
+                {comp.selected && (
+                  <div className="mt-4 p-4 bg-white rounded-lg border border-slate-200/50">
+                    <div className="text-sm font-medium text-slate-700 mb-3">Adjustments</div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <div>
+                        <Label className="text-xs text-slate-600">Condition</Label>
+                        <Input
+                          type="number"
+                          value={comp.adjustments.condition}
+                          onChange={(e) => updateAdjustment(comp.id, 'condition', Number(e.target.value))}
+                          className="h-8 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-slate-600">View</Label>
+                        <Input
+                          type="number"
+                          value={comp.adjustments.view}
+                          onChange={(e) => updateAdjustment(comp.id, 'view', Number(e.target.value))}
+                          className="h-8 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-slate-600">Parking</Label>
+                        <Input
+                          type="number"
+                          value={comp.adjustments.parking}
+                          onChange={(e) => updateAdjustment(comp.id, 'parking', Number(e.target.value))}
+                          className="h-8 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-slate-600">Adjusted Price</Label>
+                        <div className="h-8 flex items-center text-sm font-medium text-green-700">
+                          R {comp.adjustedPrice.toLocaleString()}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
               </div>
             ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Generate Reports */}
+      <Card className="bg-white border border-slate-200/60 shadow-lg shadow-slate-200/50">
+        <CardHeader className="bg-gradient-to-r from-slate-50/80 to-blue-50/30 border-b border-slate-200/50">
+          <CardTitle className="text-slate-900">Generate CMA Reports</CardTitle>
+          <CardDescription className="text-slate-600">Professional comparative market analysis documentation</CardDescription>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="flex flex-wrap gap-4">
+            <Button onClick={generateCMAReport} className="bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white shadow-lg">
+              <FileText className="h-4 w-4 mr-2" />
+              Full CMA Report
+            </Button>
+            <Button variant="outline" onClick={() => toast.info("Executive summary generating...")} className="border-slate-200 hover:bg-slate-50">
+              <Download className="h-4 w-4 mr-2" />
+              Executive Summary
+            </Button>
+            <Button variant="outline" onClick={() => toast.info("Comparable grid exporting...")} className="border-slate-200 hover:bg-slate-50">
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Comparable Grid
+            </Button>
           </div>
         </CardContent>
       </Card>
