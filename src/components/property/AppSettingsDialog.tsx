@@ -67,7 +67,7 @@ export function AppSettingsDialog({
                 <SelectValue placeholder="Choose currency..." />
               </SelectTrigger>
               <SelectContent>
-                {currencies.map(c => (
+                {currencies.filter(c => c.id && c.id.trim() !== "").map(c => (
                   <SelectItem key={c.id} value={c.id}>{c.label}</SelectItem>
                 ))}
               </SelectContent>
@@ -80,7 +80,7 @@ export function AppSettingsDialog({
                 <SelectValue placeholder="Choose measurement system..." />
               </SelectTrigger>
               <SelectContent>
-                {metrics.map(m => (
+                {metrics.filter(m => m.id && m.id.trim() !== "").map(m => (
                   <SelectItem key={m.id} value={m.id}>{m.label}</SelectItem>
                 ))}
               </SelectContent>
