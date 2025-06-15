@@ -1,120 +1,89 @@
 
-import React, { useState } from "react";
-import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { Header } from "@/components/layout/Header";
-import { Sidebar } from "@/components/layout/Sidebar";
-import { DashboardOverview } from "@/components/dashboard/DashboardOverview";
-import { PropertyManager } from "@/components/property/PropertyManager";
-import { TenantManager } from "@/components/tenant/TenantManager";
-import { UtilityTracker } from "@/components/utility/UtilityTracker";
-import { DocumentManager } from "@/components/document/DocumentManager";
-import { AIAssistant } from "@/components/ai/AIAssistant";
-import { PeopleManager } from "@/components/people/PeopleManager";
-import { WorkManager } from "@/components/work/WorkManager";
-import { LeasingManager } from "@/components/leasing/LeasingManager";
-import { MaintenanceManager } from "@/components/maintenance/MaintenanceManager";
-import { FinancialManager } from "@/components/financial/FinancialManager";
-import { ComplianceManager } from "@/components/compliance/ComplianceManager";
-import { ReportsManager } from "@/components/reports/ReportsManager";
-import { CommunicationsManager } from "@/components/communications/CommunicationsManager";
-import { APIManager } from "@/components/api/APIManager";
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from '@/components/ui/sonner';
+import Index from './pages/Index';
+import NotFound from './pages/NotFound';
+import GuestAuth from './components/auth/GuestAuth';
+import { guestAuthService, GuestUser } from './services/GuestAuthService';
+import { localStorageService } from './services/LocalStorageService';
+import './App.css';
 
-const queryClient = new QueryClient();
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
-const App: React.FC = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [activeTab, setActiveTab] = useState("dashboard");
+function App() {
+  const [currentUser, setCurrentUser] = useState<GuestUser | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const renderActiveComponent = () => {
-    switch (activeTab) {
-      case "dashboard":
-        return <DashboardOverview setActiveTab={setActiveTab} />;
-      case "properties":
-        return <PropertyManager />;
-      case "tenants":
-        return <TenantManager />;
-      case "work":
-        return <WorkManager />;
-      case "leasing":
-        return <LeasingManager />;
-      case "maintenance":
-        return <MaintenanceManager />;
-      case "financial":
-        return <FinancialManager />;
-      case "utilities":
-        return <UtilityTracker />;
-      case "compliance":
-        return <ComplianceManager />;
-      case "reports":
-        return <ReportsManager />;
-      case "documents":
-        return <DocumentManager />;
-      case "communications":
-        return <CommunicationsManager />;
-      case "ai-assistant":
-        return <AIAssistant />;
-      case "people":
-        return <PeopleManager />;
-      case "api-services":
-        return <APIManager />;
-      default:
-        return <DashboardOverview setActiveTab={setActiveTab} />;
+  useEffect(() => {
+    // Initialize services
+    localStorageService.init();
+    guestAuthService.init();
+    
+    // Check for existing authentication
+    const existingUser = guestAuthService.getCurrentUser();
+    if (existingUser) {
+      setCurrentUser(existingUser);
     }
+    
+    setIsLoading(false);
+  }, []);
+
+  const handleAuthenticated = (user: GuestUser) => {
+    setCurrentUser(user);
   };
 
+  const handleSignOut = () => {
+    guestAuthService.signOut();
+    setCurrentUser(null);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <div className="h-8 w-8 bg-white rounded-lg"></div>
+          </div>
+          <p className="text-gray-600">Loading NestCore...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show authentication if user is not logged in
+  if (!currentUser) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <GuestAuth onAuthenticated={handleAuthenticated} />
+        <Toaster />
+      </QueryClientProvider>
+    );
+  }
+
+  // Show main app if user is authenticated
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster 
-          position="top-right"
-          toastOptions={{
-            duration: 4000,
-            style: {
-              background: 'white',
-              border: '1px solid #e2e8f0',
-              borderRadius: '12px',
-              boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-            },
-          }}
-        />
-        <BrowserRouter>
-          <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 w-full">
-            <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-            <Sidebar open={sidebarOpen} activeTab={activeTab} setActiveTab={setActiveTab} />
-            
-            <main className={`transition-all duration-300 ${
-              sidebarOpen ? "ml-64" : "ml-16"
-            } mt-16 p-6 min-h-[calc(100vh-4rem)]`}>
-              <div className="max-w-7xl mx-auto">
-                <Routes>
-                  <Route path="/" element={renderActiveComponent()} />
-                  <Route path="/dashboard" element={<DashboardOverview setActiveTab={setActiveTab} />} />
-                  <Route path="/properties" element={<PropertyManager />} />
-                  <Route path="/tenants" element={<TenantManager />} />
-                  <Route path="/work" element={<WorkManager />} />
-                  <Route path="/leasing" element={<LeasingManager />} />
-                  <Route path="/maintenance" element={<MaintenanceManager />} />
-                  <Route path="/financial" element={<FinancialManager />} />
-                  <Route path="/utilities" element={<UtilityTracker />} />
-                  <Route path="/compliance" element={<ComplianceManager />} />
-                  <Route path="/reports" element={<ReportsManager />} />
-                  <Route path="/documents" element={<DocumentManager />} />
-                  <Route path="/communications" element={<CommunicationsManager />} />
-                  <Route path="/ai-assistant" element={<AIAssistant />} />
-                  <Route path="/people" element={<PeopleManager />} />
-                  <Route path="/api-services" element={<APIManager />} />
-                  <Route path="*" element={renderActiveComponent()} />
-                </Routes>
-              </div>
-            </main>
-          </div>
-        </BrowserRouter>
-      </TooltipProvider>
+      <Router>
+        <div className="min-h-screen bg-background">
+          <Routes>
+            <Route path="/" element={<Index currentUser={currentUser} onSignOut={handleSignOut} />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </div>
+        <Toaster />
+      </Router>
     </QueryClientProvider>
   );
-};
+}
 
 export default App;

@@ -26,6 +26,8 @@ import { toast } from "sonner";
 import { PropertyWorkflow } from "./PropertyWorkflow";
 import { AppSettingsDialog } from "./AppSettingsDialog";
 import { PropertySearchTab } from "./PropertySearchTab";
+import { localStorageService } from "../../services/LocalStorageService";
+import { guestAuthService } from "../../services/GuestAuthService";
 
 export const PropertyManager = () => {
   const [properties, setProperties] = useState<any[]>([]);
@@ -40,27 +42,34 @@ export const PropertyManager = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [activeTab, setActiveTab] = useState("portfolio");
 
-  // Settings state
+  // Settings state from user preferences
   const [currency, setCurrency] = useState("ZAR");
   const [metric, setMetric] = useState("metric");
 
-  // Load properties from localStorage on component mount
+  // Initialize data and load properties
   useEffect(() => {
-    const savedProperties = localStorage.getItem('nestcore-properties');
-    if (savedProperties) {
-      try {
-        setProperties(JSON.parse(savedProperties));
-      } catch (error) {
-        console.error('Failed to load properties from localStorage:', error);
-        setProperties([]);
-      }
+    // Initialize storage service
+    localStorageService.init();
+    
+    // Load properties from local storage
+    const savedProperties = localStorageService.getProperties();
+    setProperties(savedProperties);
+
+    // Load user preferences
+    const currentUser = guestAuthService.getCurrentUser();
+    if (currentUser) {
+      setCurrency(currentUser.preferences.currency);
+      setMetric(currentUser.preferences.units);
     }
   }, []);
 
-  // Save properties to localStorage whenever properties change
+  // Save properties whenever they change
   useEffect(() => {
+    // Don't save on initial load
     if (properties.length > 0) {
-      localStorage.setItem('nestcore-properties', JSON.stringify(properties));
+      properties.forEach(property => {
+        localStorageService.saveProperty(property);
+      });
     }
   }, [properties]);
 
@@ -97,37 +106,53 @@ export const PropertyManager = () => {
   const handleViewProperty = (property: any) => {
     setViewingProperty(property);
     setShowPropertyView(true);
+    
+    // Track property view in analytics
+    localStorageService.incrementPropertyView(property.id);
+    
     toast.success(`Opening detailed view for ${property.name}`);
   };
 
   const handleDeleteProperty = (property: any) => {
+    // Remove from local storage
+    localStorageService.deleteProperty(property.id);
+    
+    // Update state
     const updatedProperties = properties.filter(p => p.id !== property.id);
     setProperties(updatedProperties);
-    
-    // Update localStorage
-    if (updatedProperties.length === 0) {
-      localStorage.removeItem('nestcore-properties');
-    } else {
-      localStorage.setItem('nestcore-properties', JSON.stringify(updatedProperties));
-    }
     
     toast.success(`${property.name} has been deleted successfully`);
   };
 
   const handleSaveProperty = (propertyData: any) => {
     if (editingProperty) {
+      const updatedProperty = { 
+        ...propertyData, 
+        id: editingProperty.id, 
+        updatedAt: new Date().toISOString() 
+      };
+      
+      // Save to local storage
+      localStorageService.saveProperty(updatedProperty);
+      
+      // Update state
       const updatedProperties = properties.map(p => 
-        p.id === editingProperty.id ? { ...propertyData, id: editingProperty.id, updatedAt: new Date().toISOString() } : p
+        p.id === editingProperty.id ? updatedProperty : p
       );
       setProperties(updatedProperties);
       toast.success("Property updated successfully!");
     } else {
       const newProperty = {
         ...propertyData,
-        id: Date.now(),
+        id: Date.now().toString(),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
+      
+      // Save to local storage
+      localStorageService.saveProperty(newProperty);
+      
+      // Update state
       setProperties([...properties, newProperty]);
       toast.success("Property added successfully!");
     }
@@ -141,14 +166,15 @@ export const PropertyManager = () => {
       return;
     }
 
-    const dataStr = JSON.stringify(properties, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    const exportFileDefaultName = `nestcore-properties-${new Date().toISOString().split('T')[0]}.json`;
+    // Export all data including analytics
+    const exportData = localStorageService.exportData();
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(exportData);
+    const exportFileDefaultName = `nestcore-backup-${new Date().toISOString().split('T')[0]}.json`;
     const linkElement = document.createElement('a');
     linkElement.setAttribute('href', dataUri);
     linkElement.setAttribute('download', exportFileDefaultName);
     linkElement.click();
-    toast.success("Properties exported successfully!");
+    toast.success("Complete data backup exported successfully!");
   };
 
   const handleImport = () => {
@@ -161,15 +187,17 @@ export const PropertyManager = () => {
         const reader = new FileReader();
         reader.onload = (e: any) => {
           try {
-            const importedProperties = JSON.parse(e.target.result);
-            if (Array.isArray(importedProperties)) {
-              setProperties([...properties, ...importedProperties]);
-              toast.success(`Imported ${importedProperties.length} properties successfully!`);
+            const success = localStorageService.importData(e.target.result);
+            if (success) {
+              // Reload properties from storage
+              const importedProperties = localStorageService.getProperties();
+              setProperties(importedProperties);
+              toast.success(`Data imported successfully! ${importedProperties.length} properties loaded.`);
             } else {
-              toast.error("Invalid file format. Expected an array of properties.");
+              toast.error("Failed to import data. Please check the file format.");
             }
           } catch (error) {
-            toast.error("Failed to import properties. Please check the file format.");
+            toast.error("Failed to import data. Please check the file format.");
           }
         };
         reader.readAsText(file);
@@ -197,6 +225,19 @@ export const PropertyManager = () => {
     }
   };
 
+  const handleSettingsUpdate = (newCurrency: string, newMetric: string) => {
+    setCurrency(newCurrency);
+    setMetric(newMetric);
+    
+    // Update user preferences
+    guestAuthService.updatePreferences({
+      currency: newCurrency,
+      units: newMetric
+    });
+    
+    toast.success("Settings updated successfully!");
+  };
+
   return (
     <div className="space-y-6 p-6">
       {/* Enhanced Page Header */}
@@ -207,7 +248,7 @@ export const PropertyManager = () => {
           </div>
           <div>
             <h1 className="text-4xl font-bold text-gray-900 mb-1">Property Management</h1>
-            <p className="text-lg text-gray-600">Manage your real estate portfolio with actual data</p>
+            <p className="text-lg text-gray-600">Manage your real estate portfolio with persistent local data</p>
             <div className="flex gap-2 mt-3">
               <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                 {properties.length} Properties
@@ -229,7 +270,7 @@ export const PropertyManager = () => {
             className="bg-white hover:bg-gray-50 border-gray-300"
           >
             <Upload className="h-4 w-4 mr-2" />
-            Import
+            Import Backup
           </Button>
           <Button 
             variant="outline" 
@@ -238,7 +279,7 @@ export const PropertyManager = () => {
             disabled={properties.length === 0}
           >
             <Download className="h-4 w-4 mr-2" />
-            Export
+            Backup Data
           </Button>
           <Button 
             variant="ghost"
@@ -393,9 +434,9 @@ export const PropertyManager = () => {
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
         currency={currency}
-        setCurrency={setCurrency}
+        setCurrency={(newCurrency) => handleSettingsUpdate(newCurrency, metric)}
         metric={metric}
-        setMetric={setMetric}
+        setMetric={(newMetric) => handleSettingsUpdate(currency, newMetric)}
       />
     </div>
   );
