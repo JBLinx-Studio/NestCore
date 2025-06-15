@@ -46,10 +46,6 @@ export function PersonForm({ person, onSave, onCancel }: PersonFormProps) {
     });
   }
 
-  console.log("PersonForm ROLES:", ROLES);
-  const filteredRoles = ROLES.filter(r => r.value && r.value.trim() !== "");
-  console.log("PersonForm filteredRoles:", filteredRoles);
-
   return (
     <form className="space-y-4" onSubmit={handleSubmit}>
       <div>
@@ -63,7 +59,7 @@ export function PersonForm({ person, onSave, onCancel }: PersonFormProps) {
             <SelectValue placeholder="Select role" />
           </SelectTrigger>
           <SelectContent>
-            {filteredRoles.map(r => (
+            {ROLES.map(r => (
               <SelectItem key={r.value} value={r.value}>
                 <span className="inline-flex items-center gap-1"><r.icon className="h-4 w-4" />{r.label}</span>
               </SelectItem>
