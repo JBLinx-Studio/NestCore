@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import { DocumentActions } from "./DocumentActions";
@@ -276,12 +275,12 @@ export const DocumentManager = () => {
         break;
       case 'download':
         affectedDocs.forEach(doc => {
-          const link = document.createElement('a');
+          const link = globalThis.document.createElement('a');
           link.href = doc.url || '#';
           link.download = doc.name;
-          document.body.appendChild(link);
+          globalThis.document.body.appendChild(link);
           link.click();
-          document.body.removeChild(link);
+          globalThis.document.body.removeChild(link);
         });
         toast.success(`Downloading ${documentIds.length} document${documentIds.length > 1 ? 's' : ''}...`);
         break;
@@ -333,12 +332,12 @@ export const DocumentManager = () => {
 
   const handleDownloadDocument = useCallback((document: Document) => {
     toast.success(`Downloading ${document.name}...`);
-    const link = document.createElement('a');
+    const link = globalThis.document.createElement('a');
     link.href = document.url || '#';
     link.download = document.name;
-    document.body.appendChild(link);
+    globalThis.document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
+    globalThis.document.body.removeChild(link);
   }, []);
 
   const handleDeleteDocument = useCallback((docId: number) => {
