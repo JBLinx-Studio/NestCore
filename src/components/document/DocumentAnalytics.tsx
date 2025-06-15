@@ -12,9 +12,10 @@ import {
   PieChart,
   BarChart3
 } from "lucide-react";
+import { Document } from "./types";
 
 interface DocumentAnalyticsProps {
-  documents: any[];
+  documents: Document[];
 }
 
 export const DocumentAnalytics = ({ documents }: DocumentAnalyticsProps) => {
@@ -43,7 +44,7 @@ export const DocumentAnalytics = ({ documents }: DocumentAnalyticsProps) => {
   }).length;
 
   const expiringSoon = documents.filter(doc => {
-    if (!doc.expiryDate) return false;
+    if (!('expiryDate' in doc) || !doc.expiryDate) return false;
     const expiryDate = new Date(doc.expiryDate);
     const nextMonth = new Date();
     nextMonth.setMonth(nextMonth.getMonth() + 1);
@@ -136,7 +137,7 @@ export const DocumentAnalytics = ({ documents }: DocumentAnalyticsProps) => {
         <CardContent>
           <div className="space-y-3">
             {Object.entries(categoryCounts).map(([category, count]) => {
-              const percentage = (count / totalDocuments) * 100;
+              const percentage = totalDocuments > 0 ? (Number(count) / totalDocuments) * 100 : 0;
               return (
                 <div key={category} className="flex items-center justify-between">
                   <div className="flex items-center space-x-3 flex-1">
@@ -144,7 +145,7 @@ export const DocumentAnalytics = ({ documents }: DocumentAnalyticsProps) => {
                     <Progress value={percentage} className="flex-1 h-2" />
                   </div>
                   <div className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-600">{count}</span>
+                    <span className="text-sm text-gray-600">{String(count)}</span>
                     <Badge variant="outline" className="text-xs">
                       {percentage.toFixed(1)}%
                     </Badge>

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,7 @@ import { DocumentAnalytics } from "./DocumentAnalytics";
 import { DocumentFilters } from "./DocumentFilters";
 import { getFileIcon, getStatusColor } from "./categories";
 import { validateFiles, getFileCategory, formatFileSize } from "./fileValidation";
+import { Document } from "./types";
 
 interface UploadFile {
   file: File;
@@ -51,13 +53,13 @@ export const DocumentManager = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedDocumentIds, setSelectedDocumentIds] = useState<number[]>([]);
-  const [viewingDocument, setViewingDocument] = useState<any>(null);
+  const [viewingDocument, setViewingDocument] = useState<Document | null>(null);
   const [showDocumentView, setShowDocumentView] = useState(false);
   const [uploadingFiles, setUploadingFiles] = useState<UploadFile[]>([]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<number | null>(null);
   const [advancedFilters, setAdvancedFilters] = useState<any>({});
-  const [documents, setDocuments] = useState([
+  const [documents, setDocuments] = useState<Document[]>([
     {
       id: 1,
       name: "Lease Agreement - Sarah Johnson",
@@ -212,7 +214,7 @@ export const DocumentManager = () => {
     try {
       await simulateFileUpload(file);
       
-      const newDocument = {
+      const newDocument: Document = {
         id: Date.now(),
         name: file.name,
         type: "document",
@@ -328,7 +330,7 @@ export const DocumentManager = () => {
   };
 
   const handleCreateFolder = (name: string) => {
-    const newFolder = {
+    const newFolder: Document = {
       id: Date.now(),
       name: name,
       type: "folder",
@@ -582,4 +584,50 @@ export const DocumentManager = () => {
       />
     </DropZone>
   );
+};
+
+// Missing function implementations
+const simulateFileUpload = (file: File): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    const uploadTime = Math.random() * 3000 + 1000;
+    const shouldFail = Math.random() < 0.1;
+    
+    setTimeout(() => {
+      if (shouldFail) {
+        reject(new Error('Upload failed'));
+      } else {
+        resolve();
+      }
+    }, uploadTime);
+  });
+};
+
+const handleFilesDropped = (files: File[]) => {
+  // Implementation for handling dropped files
+  console.log('Files dropped:', files);
+};
+
+const handleRemoveUploadingFile = (index: number) => {
+  // Implementation for removing uploading file
+  console.log('Remove file at index:', index);
+};
+
+const handleRetryUpload = (index: number) => {
+  // Implementation for retrying upload
+  console.log('Retry upload at index:', index);
+};
+
+const handleBulkUpload = (files: FileList) => {
+  // Implementation for bulk upload
+  console.log('Bulk upload:', files);
+};
+
+const handleBulkAction = (action: string, documentIds: number[]) => {
+  // Implementation for bulk actions
+  console.log('Bulk action:', action, documentIds);
+};
+
+const applyFilters = (docs: Document[]) => {
+  // Implementation for applying filters
+  return docs;
 };
