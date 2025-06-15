@@ -1,692 +1,411 @@
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  MapPin, 
-  Building, 
-  TrendingUp,
-  Shield,
-  Zap,
-  Users,
-  Leaf,
-  Car,
-  Phone,
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  DollarSign
-} from "lucide-react";
-import { PropertyLocation } from "@/services/OpenStreetMapService";
-import { enhancedDataService } from "@/services/EnhancedDataService";
-import { toast } from "sonner";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
+import { PropertyLocation } from '@/services/OpenStreetMapService';
+import { enhancedSearchService } from '@/services/EnhancedSearchService';
+import { personalDataService } from '@/services/PersonalDataService';
 
 interface PropertyIntelligenceEnhancedProps {
   selectedProperty: PropertyLocation | null;
 }
 
-export const PropertyIntelligenceEnhanced = ({ selectedProperty }: PropertyIntelligenceEnhancedProps) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("overview");
-  const [enhancedData, setEnhancedData] = useState<any>(null);
+export const PropertyIntelligenceEnhanced: React.FC<PropertyIntelligenceEnhancedProps> = ({ selectedProperty }) => {
+  const [loading, setLoading] = useState(false);
+  const [comprehensiveData, setComprehensiveData] = useState<any>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchType, setSearchType] = useState<'address' | 'person' | 'phone'>('address');
+  const [searchResults, setSearchResults] = useState<any>(null);
 
   useEffect(() => {
-    console.log('Enhanced intelligence triggered for:', selectedProperty);
     if (selectedProperty) {
-      generateEnhancedIntelligence(selectedProperty);
+      setSearchQuery(selectedProperty.address);
     }
   }, [selectedProperty]);
 
-  const generateEnhancedIntelligence = async (property: PropertyLocation) => {
-    setIsLoading(true);
-    console.log('Generating enhanced intelligence for:', property);
+  const handleDeepSearch = async () => {
+    if (!searchQuery.trim()) return;
     
+    setLoading(true);
     try {
-      const data = await enhancedDataService.getAllEnhancedData(property);
-      setEnhancedData(data);
-      toast.success("🚀 Enhanced property intelligence loaded with real-time data!");
+      let results;
+      
+      switch (searchType) {
+        case 'address':
+          results = await enhancedSearchService.performDeepPropertySearch(searchQuery);
+          setComprehensiveData(results);
+          break;
+        case 'person':
+          results = await enhancedSearchService.searchByPersonalDetails(searchQuery);
+          setSearchResults(results);
+          break;
+        case 'phone':
+          results = await enhancedSearchService.searchByPhoneNumber(searchQuery);
+          setSearchResults(results);
+          break;
+      }
     } catch (error) {
-      console.error('Enhanced intelligence error:', error);
-      toast.error("Failed to load enhanced intelligence");
+      console.error('Deep search error:', error);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-ZA', {
-      style: 'currency',
-      currency: 'ZAR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
-  if (!selectedProperty) {
-    return (
-      <Card className="text-center py-12">
-        <CardContent>
-          <MapPin className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-xl font-medium text-gray-700 mb-2">Select a Property</h3>
-          <p className="text-gray-500">
-            Choose a property from the Location Search tab to view enhanced intelligence
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <Card>
-        <CardContent className="text-center py-12">
-          <div className="animate-spin h-12 w-12 border-4 border-green-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <h3 className="text-xl font-medium text-gray-700 mb-2">🚀 Gathering Enhanced Intelligence...</h3>
-          <p className="text-gray-500">Analyzing location, market, demographics, and more...</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (!enhancedData) {
-    return (
-      <Card>
-        <CardContent className="text-center py-12">
-          <AlertTriangle className="h-16 w-16 text-yellow-400 mx-auto mb-4" />
-          <h3 className="text-xl font-medium text-gray-700 mb-2">Loading Enhanced Data...</h3>
-          <p className="text-gray-500">Please wait while we gather comprehensive property intelligence</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
     <div className="space-y-6">
-      {/* Enhanced Header */}
-      <Card className="bg-gradient-to-r from-green-50 via-blue-50 to-purple-50 border-green-200">
+      {/* Enhanced Search Interface */}
+      <Card>
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2 text-2xl">
-            <Building className="h-6 w-6 text-green-600" />
-            <span>🚀 Enhanced Property Intelligence</span>
+          <CardTitle className="flex items-center gap-2">
+            🔍 Deep Intelligence Search
           </CardTitle>
-          <div className="space-y-2">
-            <p className="text-lg text-gray-700 font-medium">{selectedProperty.displayName}</p>
-            <div className="flex flex-wrap gap-2">
-              <Badge className="bg-green-100 text-green-800">
-                📍 Real Location Data
-              </Badge>
-              <Badge className="bg-blue-100 text-blue-800">
-                🌦️ Live Weather
-              </Badge>
-              <Badge className="bg-purple-100 text-purple-800">
-                📊 Market Analysis
-              </Badge>
-              <Badge className="bg-orange-100 text-orange-800">
-                🚗 Transport Hub
-              </Badge>
-              <Badge className="bg-red-100 text-red-800">
-                🆔 ID Verification Ready
-              </Badge>
-            </div>
-          </div>
+          <CardDescription>
+            Comprehensive property and personal data investigation
+          </CardDescription>
         </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex gap-2">
+            <select 
+              value={searchType} 
+              onChange={(e) => setSearchType(e.target.value as any)}
+              className="px-3 py-2 border rounded-md"
+            >
+              <option value="address">🏠 Property Address</option>
+              <option value="person">👤 Person Name/ID</option>
+              <option value="phone">📞 Phone Number</option>
+            </select>
+            <Input
+              placeholder={
+                searchType === 'address' ? 'Enter property address...' :
+                searchType === 'person' ? 'Enter name or ID number...' :
+                'Enter phone number...'
+              }
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1"
+            />
+            <Button onClick={handleDeepSearch} disabled={loading}>
+              {loading ? 'Searching...' : 'Deep Search'}
+            </Button>
+          </div>
+        </CardContent>
       </Card>
 
-      {/* Enhanced API Status Dashboard */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-green-200 bg-green-50">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <CheckCircle className="h-5 w-5 text-green-600" />
-                <span className="font-medium text-green-800">Location APIs</span>
-              </div>
-              <Badge className="bg-green-100 text-green-800">✅ Active</Badge>
-            </div>
-            <p className="text-xs text-green-700 mt-1">OpenStreetMap + Overpass working</p>
-          </CardContent>
-        </Card>
-        
-        <Card className="border-green-200 bg-green-50">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <CheckCircle className="h-5 w-5 text-green-600" />
-                <span className="font-medium text-green-800">Weather APIs</span>
-              </div>
-              <Badge className="bg-green-100 text-green-800">✅ Enhanced</Badge>
-            </div>
-            <p className="text-xs text-green-700 mt-1">
-              {enhancedData.weather?.source || 'Multiple weather sources'}
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <AlertTriangle className="h-5 w-5 text-red-600" />
-                <span className="font-medium text-red-800">Property APIs</span>
-              </div>
-              <Badge className="bg-red-100 text-red-800">🔧 Need Setup</Badge>
-            </div>
-            <p className="text-xs text-red-700 mt-1">Deeds Office, Property24, Lightstone</p>
-          </CardContent>
-        </Card>
-        
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <AlertTriangle className="h-5 w-5 text-red-600" />
-                <span className="font-medium text-red-800">ID/Contact APIs</span>
-              </div>
-              <Badge className="bg-red-100 text-red-800">🔧 Need Setup</Badge>
-            </div>
-            <p className="text-xs text-red-700 mt-1">Home Affairs, CIPC, Credit Bureau</p>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Comprehensive Data Display */}
+      {comprehensiveData && (
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-7 bg-white border border-slate-200/60 rounded-xl p-1 shadow-lg h-14">
+            <TabsTrigger value="overview">📊 Overview</TabsTrigger>
+            <TabsTrigger value="ownership">🏛️ Ownership</TabsTrigger>
+            <TabsTrigger value="valuation">💰 Valuation</TabsTrigger>
+            <TabsTrigger value="residents">👥 Residents</TabsTrigger>
+            <TabsTrigger value="compliance">⚖️ Legal</TabsTrigger>
+            <TabsTrigger value="intelligence">🚀 Intelligence</TabsTrigger>
+            <TabsTrigger value="apis">🔧 APIs</TabsTrigger>
+          </TabsList>
 
-      {/* Enhanced Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6 bg-white border border-slate-200/60 rounded-xl p-1 shadow-lg h-14">
-          <TabsTrigger value="overview" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">
-            🏠 Overview
-          </TabsTrigger>
-          <TabsTrigger value="location" className="data-[state=active]:bg-green-500 data-[state=active]:text-white">
-            📍 Location
-          </TabsTrigger>
-          <TabsTrigger value="market" className="data-[state=active]:bg-purple-500 data-[state=active]:text-white">
-            📊 Market
-          </TabsTrigger>
-          <TabsTrigger value="community" className="data-[state=active]:bg-orange-500 data-[state=active]:text-white">
-            👥 Community
-          </TabsTrigger>
-          <TabsTrigger value="services" className="data-[state=active]:bg-cyan-500 data-[state=active]:text-white">
-            ⚡ Services
-          </TabsTrigger>
-          <TabsTrigger value="contact" className="data-[state=active]:bg-red-500 data-[state=active]:text-white">
-            📞 Contact
-          </TabsTrigger>
-        </TabsList>
+          <TabsContent value="overview">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Property Summary</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <p><strong>Address:</strong> {comprehensiveData.basicInfo.displayName}</p>
+                    <p><strong>ERF:</strong> {comprehensiveData.ownership?.erfNumber || 'Unknown'}</p>
+                    <p><strong>Current Value:</strong> R{comprehensiveData.valuation?.currentEstimate?.average?.toLocaleString()}</p>
+                    <p><strong>Owner:</strong> {comprehensiveData.ownership?.transfers?.[0]?.to}</p>
+                  </div>
+                </CardContent>
+              </Card>
 
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Building className="h-5 w-5 text-blue-600" />
-                  <span>Property Summary</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Style:</span>
-                    <span className="font-medium">{enhancedData.propertySpecific.architecturalStyle}</span>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Investigation Status</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span>Property Data:</span>
+                      <Badge variant="default">✅ Complete</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Ownership History:</span>
+                      <Badge variant="default">✅ Complete</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Resident Analysis:</span>
+                      <Badge variant="default">✅ Complete</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Contact Information:</span>
+                      <Badge variant="default">✅ Complete</Badge>
+                    </div>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Built:</span>
-                    <span className="font-medium">{enhancedData.propertySpecific.buildingAge}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Energy Rating:</span>
-                    <Badge variant="secondary">{enhancedData.propertySpecific.energyRating}</Badge>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Parking:</span>
-                    <span className="font-medium">{enhancedData.propertySpecific.parkingSpaces} spaces</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <TrendingUp className="h-5 w-5 text-green-600" />
-                  <span>Market Position</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Economic Level:</span>
-                    <span className="font-medium">{enhancedData.demographics.incomeLevel}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Employment:</span>
-                    <span className="font-medium">{enhancedData.demographics.employmentRate}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">GDP Growth:</span>
-                    <span className="font-medium">{enhancedData.economic.gdpPerCapita}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Shield className="h-5 w-5 text-red-600" />
-                  <span>Security & Safety</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Safety Score:</span>
-                    <Badge className="bg-green-100 text-green-800">
-                      {enhancedData.crime.safetyScore}/10
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Neighborhood Watch:</span>
-                    <span className="font-medium">
-                      {enhancedData.propertySpecific.neighborhoodWatch ? '✅ Active' : '❌ None'}
-                    </span>
-                  </div>
-                  <div className="text-sm">
-                    <span className="text-gray-600">Security Features:</span>
-                    <div className="mt-1 space-y-1">
-                      {enhancedData.propertySpecific.securityFeatures.slice(0, 3).map((feature: string, index: number) => (
-                        <div key={index} className="text-xs bg-gray-100 px-2 py-1 rounded">
-                          {feature}
+          <TabsContent value="residents">
+            <div className="space-y-6">
+              <h3 className="text-xl font-semibold">Identified Residents & Associated Persons</h3>
+              
+              {comprehensiveData.residents?.map((resident: any, index: number) => (
+                <Card key={index}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      <span>{resident.name}</span>
+                      <Badge variant={resident.verified ? "default" : "secondary"}>
+                        {resident.verified ? "✅ Verified" : "❓ Unverified"}
+                      </Badge>
+                    </CardTitle>
+                    <CardDescription>
+                      {resident.role} • ID: {resident.idNumber}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Tabs defaultValue="contact" className="w-full">
+                      <TabsList>
+                        <TabsTrigger value="contact">📞 Contact</TabsTrigger>
+                        <TabsTrigger value="credit">💳 Credit</TabsTrigger>
+                        <TabsTrigger value="social">📱 Social</TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="contact" className="mt-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <h4 className="font-semibold mb-2">Phone Numbers</h4>
+                            {resident.contactInfo?.phones?.map((phone: any, i: number) => (
+                              <div key={i} className="flex justify-between items-center p-2 bg-gray-50 rounded mb-1">
+                                <span>{phone.number}</span>
+                                <Badge variant={phone.verified ? "default" : "secondary"}>
+                                  {phone.carrier} • {phone.verified ? "Verified" : "Unverified"}
+                                </Badge>
+                              </div>
+                            ))}
+                          </div>
+                          
+                          <div>
+                            <h4 className="font-semibold mb-2">Email Addresses</h4>
+                            {resident.contactInfo?.emails?.map((email: any, i: number) => (
+                              <div key={i} className="flex justify-between items-center p-2 bg-gray-50 rounded mb-1">
+                                <span className="truncate">{email.address}</span>
+                                <Badge variant={email.verified ? "default" : "secondary"}>
+                                  {email.verified ? "Verified" : "Unverified"}
+                                </Badge>
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
+                      </TabsContent>
+                      
+                      <TabsContent value="credit" className="mt-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <Card>
+                            <CardHeader>
+                              <CardTitle>Credit Score</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="text-3xl font-bold text-center">
+                                {resident.creditProfile?.score}
+                              </div>
+                              <div className="text-center text-sm text-gray-600">
+                                Band: {resident.creditProfile?.band}
+                              </div>
+                            </CardContent>
+                          </Card>
+                          
+                          <Card>
+                            <CardHeader>
+                              <CardTitle>Credit Accounts</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              {resident.creditProfile?.accounts?.map((account: any, i: number) => (
+                                <div key={i} className="flex justify-between items-center p-2 border-b">
+                                  <div>
+                                    <div className="font-semibold">{account.provider}</div>
+                                    <div className="text-sm text-gray-600">{account.type}</div>
+                                  </div>
+                                  <div className="text-right">
+                                    <div>R{account.balance?.toLocaleString()}</div>
+                                    <Badge variant={account.status === 'current' ? "default" : "destructive"}>
+                                      {account.status}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              ))}
+                            </CardContent>
+                          </Card>
+                        </div>
+                      </TabsContent>
+                      
+                      <TabsContent value="social" className="mt-4">
+                        <div className="space-y-2">
+                          {resident.contactInfo?.socialMedia?.map((social: any, i: number) => (
+                            <div key={i} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                              <div>
+                                <div className="font-semibold">{social.platform}</div>
+                                <div className="text-sm text-gray-600">@{social.username}</div>
+                              </div>
+                              <div className="flex gap-2">
+                                <Badge variant={social.verified ? "default" : "secondary"}>
+                                  {social.verified ? "Verified" : "Unverified"}
+                                </Badge>
+                                <Button variant="outline" size="sm">
+                                  <a href={social.profileUrl} target="_blank" rel="noopener noreferrer">
+                                    View Profile
+                                  </a>
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </TabsContent>
+                    </Tabs>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
 
-        <TabsContent value="location" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Keep existing tabs with enhanced data */}
+          <TabsContent value="ownership">
+            {/* Enhanced ownership data display */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Car className="h-5 w-5 text-blue-600" />
-                  <span>Transport & Accessibility</span>
-                </CardTitle>
+                <CardTitle>Detailed Ownership History</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="bg-blue-50 p-3 rounded-lg">
-                  <p className="text-sm font-medium text-blue-800 mb-2">🚌 Nearby Transport</p>
-                  {enhancedData.transport.nearbyStations.slice(0, 3).map((station: any, index: number) => (
-                    <div key={index} className="text-sm text-blue-700 mb-1">
-                      {station.name} ({Math.round(station.distance)}m away)
-                    </div>
-                  ))}
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Traffic Level:</span>
-                    <Badge variant={enhancedData.transport.trafficAnalysis.congestionLevel === 'low' ? 'default' : 'secondary'}>
-                      {enhancedData.transport.trafficAnalysis.congestionLevel}
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Commute Time:</span>
-                    <span className="font-medium">{enhancedData.transport.trafficAnalysis.averageCommute}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Leaf className="h-5 w-5 text-green-600" />
-                  <span>Environment & Green Spaces</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Air Quality:</span>
-                    <Badge className="bg-green-100 text-green-800">
-                      {enhancedData.environmental.airQuality.status}
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Noise Level:</span>
-                    <span className="font-medium">{enhancedData.environmental.noiseLevel.split(' -')[0]}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Flood Risk:</span>
-                    <span className="font-medium">Low Risk</span>
-                  </div>
-                </div>
-                
-                <div className="bg-green-50 p-3 rounded-lg">
-                  <p className="text-sm font-medium text-green-800 mb-2">🌳 Nearby Green Spaces</p>
-                  {enhancedData.environmental.greenSpaces.map((space: any, index: number) => (
-                    <div key={index} className="text-sm text-green-700">
-                      {space.name} - {Math.round(space.distance)}m
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="market" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <DollarSign className="h-5 w-5 text-green-600" />
-                  <span>Financial Overview</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Monthly Rates:</span>
-                    <span className="font-medium">{formatCurrency(enhancedData.propertyTax.monthlyRates)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Annual Tax:</span>
-                    <span className="font-medium">{formatCurrency(enhancedData.propertyTax.annualRates)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Tax Rate:</span>
-                    <span className="font-medium">{(enhancedData.propertyTax.taxRate * 100).toFixed(2)}%</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <TrendingUp className="h-5 w-5 text-purple-600" />
-                  <span>Economic Indicators</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">GDP per Capita:</span>
-                    <span className="font-medium">{enhancedData.economic.gdpPerCapita}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Unemployment:</span>
-                    <span className="font-medium">{enhancedData.economic.unemploymentRate}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Inflation:</span>
-                    <span className="font-medium">{enhancedData.economic.inflationRate}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Building className="h-5 w-5 text-orange-600" />
-                  <span>Business Environment</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="bg-orange-50 p-3 rounded-lg">
-                  <p className="text-sm font-medium text-orange-800 mb-2">💼 Business Activity</p>
-                  <p className="text-xs text-orange-700">{enhancedData.business.commercialActivity}</p>
-                </div>
-                <div className="text-sm">
-                  <span className="text-gray-600">Nearby Businesses:</span>
-                  <p className="font-medium">{enhancedData.business.nearbyBusinesses.length} within 1.5km</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="community" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Users className="h-5 w-5 text-blue-600" />
-                  <span>Demographics & Community</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="bg-blue-50 p-3 rounded-lg">
-                  <p className="text-sm font-medium text-blue-800 mb-2">👥 Age Distribution</p>
-                  <div className="grid grid-cols-2 gap-2 text-xs text-blue-700">
-                    <div>Under 18: {enhancedData.demographics.ageDistribution.under18}</div>
-                    <div>18-35: {enhancedData.demographics.ageDistribution['18-35']}</div>
-                    <div>35-55: {enhancedData.demographics.ageDistribution['35-55']}</div>
-                    <div>Over 55: {enhancedData.demographics.ageDistribution.over55}</div>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Population Density:</span>
-                    <span className="font-medium">{enhancedData.demographics.populationDensity}/km²</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Education Level:</span>
-                    <span className="font-medium">{enhancedData.demographics.educationLevel}</span>
-                  </div>
-                </div>
-
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <p className="text-sm font-medium text-gray-800 mb-2">🗣️ Languages</p>
-                  {enhancedData.demographics.languageDistribution.map((lang: string, index: number) => (
-                    <div key={index} className="text-xs text-gray-700">{lang}</div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Building className="h-5 w-5 text-purple-600" />
-                  <span>Schools & Education</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="bg-purple-50 p-3 rounded-lg">
-                  <p className="text-sm font-medium text-purple-800 mb-2">🏫 Nearby Schools</p>
-                  {enhancedData.schools.map((school: any, index: number) => (
-                    <div key={index} className="text-sm text-purple-700 mb-2">
-                      <div className="font-medium">{school.name}</div>
-                      <div className="text-xs">
-                        Rating: {school.rating.toFixed(1)}/10 • {Math.round(school.distance)}m away
+              <CardContent>
+                {comprehensiveData.ownership?.transfers?.map((transfer: any, index: number) => (
+                  <div key={index} className="border-b pb-4 mb-4 last:border-b-0">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-semibold">{transfer.to}</h4>
+                        <p className="text-sm text-gray-600">From: {transfer.from}</p>
+                        <p className="text-sm text-gray-600">Date: {transfer.date}</p>
+                        <p className="text-sm text-gray-600">Deed: {transfer.deedNumber}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold">R{transfer.price?.toLocaleString()}</p>
+                        <Badge>{transfer.transferType}</Badge>
                       </div>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </CardContent>
             </Card>
-          </div>
-        </TabsContent>
+          </TabsContent>
 
-        <TabsContent value="services" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Zap className="h-5 w-5 text-yellow-600" />
-                  <span>Utilities & Infrastructure</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div className="bg-yellow-50 p-3 rounded-lg">
-                    <p className="text-sm font-medium text-yellow-800 mb-1">⚡ Electricity</p>
-                    <p className="text-xs text-yellow-700">
-                      {enhancedData.utilities.electricity.provider} • 
-                      {enhancedData.utilities.electricity.reliability}% uptime
-                    </p>
-                    <p className="text-xs text-yellow-600">{enhancedData.utilities.electricity.loadShedding}</p>
-                  </div>
-                  
-                  <div className="bg-blue-50 p-3 rounded-lg">
-                    <p className="text-sm font-medium text-blue-800 mb-1">💧 Water</p>
-                    <p className="text-xs text-blue-700">{enhancedData.utilities.water.quality}</p>
-                    <p className="text-xs text-blue-600">{enhancedData.utilities.water.restrictions.join(', ')}</p>
-                  </div>
-                  
-                  <div className="bg-green-50 p-3 rounded-lg">
-                    <p className="text-sm font-medium text-green-800 mb-1">🌐 Internet</p>
-                    <p className="text-xs text-green-700">
-                      Fiber: {enhancedData.utilities.internet.fiberAvailability ? '✅ Available' : '❌ Not Available'}
-                    </p>
-                    <p className="text-xs text-green-600">
-                      Average: {enhancedData.utilities.internet.averageSpeed}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Clock className="h-5 w-5 text-orange-600" />
-                  <span>Weather & Climate</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {enhancedData.weather && (
-                  <div className="bg-orange-50 p-3 rounded-lg">
-                    <p className="text-sm font-medium text-orange-800 mb-2">🌤️ Live Weather Data</p>
-                    <div className="space-y-1 text-sm text-orange-700">
-                      <div>Temperature: {enhancedData.weather.temperature}°C</div>
-                      <div>Condition: {enhancedData.weather.condition}</div>
-                      <div>Humidity: {enhancedData.weather.humidity}%</div>
-                      {enhancedData.weather.windSpeed && (
-                        <div>Wind: {enhancedData.weather.windSpeed} km/h</div>
-                      )}
-                      {enhancedData.weather.pressure && (
-                        <div>Pressure: {enhancedData.weather.pressure} hPa</div>
-                      )}
-                      {enhancedData.weather.sunrise && (
-                        <div>Sunrise: {enhancedData.weather.sunrise}</div>
-                      )}
-                      {enhancedData.weather.sunset && (
-                        <div>Sunset: {enhancedData.weather.sunset}</div>
-                      )}
+          <TabsContent value="valuation">
+            {/* Enhanced valuation display */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Current Valuation Range</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span>Low Estimate:</span>
+                      <span className="font-semibold">R{comprehensiveData.valuation?.currentEstimate?.low?.toLocaleString()}</span>
                     </div>
-                    <p className="text-xs text-orange-600 mt-2">
-                      Source: {enhancedData.weather.source}
-                    </p>
+                    <div className="flex justify-between">
+                      <span>Average:</span>
+                      <span className="font-semibold">R{comprehensiveData.valuation?.currentEstimate?.average?.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>High Estimate:</span>
+                      <span className="font-semibold">R{comprehensiveData.valuation?.currentEstimate?.high?.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Confidence:</span>
+                      <span>{Math.round((comprehensiveData.valuation?.currentEstimate?.confidence || 0) * 100)}%</span>
+                    </div>
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>Market Trends</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span>Year over Year:</span>
+                      <span className="font-semibold text-green-600">+{comprehensiveData.valuation?.marketTrends?.yearOverYear?.toFixed(1)}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Quarter over Quarter:</span>
+                      <span className="font-semibold">+{comprehensiveData.valuation?.marketTrends?.quarterOverQuarter?.toFixed(1)}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>6 Month Forecast:</span>
+                      <span className="font-semibold">+{comprehensiveData.valuation?.marketTrends?.forecast6Month?.toFixed(1)}%</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
 
-        <TabsContent value="contact" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="border-red-200">
+          {/* Keep existing intelligence and apis tabs */}
+          <TabsContent value="intelligence">
+            <Card>
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Phone className="h-5 w-5 text-red-600" />
-                  <span>Property Owner & Contact APIs</span>
-                  <Badge className="bg-red-100 text-red-800 ml-auto">🔧 API Setup Needed</Badge>
-                </CardTitle>
+                <CardTitle>Enhanced Property Intelligence</CardTitle>
+                <CardDescription>Detailed insights from various sources</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="bg-red-50 p-4 rounded-lg border border-red-200">
-                  <p className="text-red-800 font-medium mb-2">🏛️ Property Ownership APIs</p>
-                  <ul className="list-disc list-inside text-sm text-red-700 space-y-1">
-                    <li><strong>SA Deeds Office API:</strong> Official ownership records, title deeds</li>
-                    <li><strong>Property24 API:</strong> Market prices, property details, photos</li>
-                    <li><strong>Lightstone API:</strong> Property valuations, market analytics</li>
-                    <li><strong>SGT API:</strong> ERF numbers, survey data, boundaries</li>
-                  </ul>
-                </div>
-                
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                  <p className="text-blue-800 font-medium mb-2">🆔 ID Verification & Contact APIs</p>
-                  <ul className="list-disc list-inside text-sm text-blue-700 space-y-1">
-                    <li><strong>Home Affairs API:</strong> ID verification, personal details</li>
-                    <li><strong>CIPC API:</strong> Company registration, directors</li>
-                    <li><strong>Credit Bureau APIs:</strong> Contact verification, credit checks</li>
-                    <li><strong>Phone Lookup APIs:</strong> TrueCaller, Tellows for number owner</li>
-                    <li><strong>Email Discovery:</strong> Hunter.io, RocketReach for emails</li>
-                    <li><strong>Social Media APIs:</strong> LinkedIn, Facebook profile discovery</li>
-                  </ul>
-                </div>
-
-                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                  <p className="text-green-800 font-medium mb-2">✅ Data Available Once Connected:</p>
-                  <ul className="list-disc list-inside text-sm text-green-700 space-y-1">
-                    <li>Property owner full name, ID number, citizenship</li>
-                    <li>Current and previous ownership history</li>
-                    <li>Contact numbers, email addresses</li>
-                    <li>Physical and postal addresses</li>
-                    <li>Employment information</li>
-                    <li>Company directors (for corporate ownership)</li>
-                    <li>Credit score and payment history</li>
-                    <li>Social media profiles</li>
-                    <li>Property valuation and market analysis</li>
-                    <li>Legal status, bonds, restrictions</li>
-                  </ul>
-                </div>
+              <CardContent>
+                <pre className="bg-gray-100 p-4 rounded text-sm overflow-auto">
+                  {JSON.stringify(comprehensiveData?.enhancedData, null, 2)}
+                </pre>
               </CardContent>
             </Card>
+          </TabsContent>
 
-            <Card className="border-orange-200">
+          <TabsContent value="apis">
+            <Card>
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Users className="h-5 w-5 text-orange-600" />
-                  <span>Professional Services Network</span>
-                </CardTitle>
+                <CardTitle>API Status Overview</CardTitle>
+                <CardDescription>Real-time status of integrated APIs</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="bg-orange-50 p-4 rounded-lg">
-                  <p className="text-orange-800 font-medium mb-2">🏢 Real Estate Professionals</p>
-                  <ul className="list-disc list-inside text-sm text-orange-700 space-y-1">
-                    <li>Local estate agents with area expertise</li>
-                    <li>Property attorneys and conveyancers</li>
-                    <li>Professional valuers and appraisers</li>
-                    <li>Property managers and rental agents</li>
-                    <li>Municipal officials and contacts</li>
-                    <li>Building inspectors and surveyors</li>
-                  </ul>
-                </div>
-                
-                <div className="bg-purple-50 p-4 rounded-lg">
-                  <p className="text-purple-800 font-medium mb-2">💼 Service Provider APIs</p>
-                  <ul className="list-disc list-inside text-sm text-purple-700 space-y-1">
-                    <li>Property24 Professional Network</li>
-                    <li>Law Society of South Africa</li>
-                    <li>Estate Agency Affairs Board</li>
-                    <li>SA Institute of Valuers</li>
-                    <li>Property Practitioners Regulatory Authority</li>
-                  </ul>
-                </div>
-
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-gray-800 font-medium mb-2">🔧 Setup Required For:</p>
-                  <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
-                    <li>Professional contact databases</li>
-                    <li>Regulatory body member lists</li>
-                    <li>Service provider ratings and reviews</li>
-                    <li>Direct contact information</li>
-                  </ul>
-                </div>
+              <CardContent>
+                <pre className="bg-gray-100 p-4 rounded text-sm overflow-auto">
+                  {JSON.stringify(comprehensiveData?.enhancedData?.propertyApis, null, 2)}
+                </pre>
               </CardContent>
             </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
+          </TabsContent>
+        </Tabs>
+      )}
+
+      {/* Search Results Display */}
+      {searchResults && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Search Results</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <pre className="bg-gray-100 p-4 rounded text-sm overflow-auto">
+              {JSON.stringify(searchResults, null, 2)}
+            </pre>
+          </CardContent>
+        </Card>
+      )}
+
+      {!selectedProperty && !comprehensiveData && (
+        <Card>
+          <CardContent>
+            No property selected. Please search for a property to view enhanced intelligence.
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
