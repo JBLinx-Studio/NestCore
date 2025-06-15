@@ -23,6 +23,7 @@ const queryClient = new QueryClient({
 function App() {
   const [currentUser, setCurrentUser] = useState<GuestUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showAuth, setShowAuth] = useState(false);
 
   useEffect(() => {
     // Initialize services
@@ -33,6 +34,9 @@ function App() {
     const existingUser = guestAuthService.getCurrentUser();
     if (existingUser) {
       setCurrentUser(existingUser);
+      setShowAuth(false);
+    } else {
+      setShowAuth(true);
     }
     
     setIsLoading(false);
@@ -40,11 +44,13 @@ function App() {
 
   const handleAuthenticated = (user: GuestUser) => {
     setCurrentUser(user);
+    setShowAuth(false);
   };
 
   const handleSignOut = () => {
     guestAuthService.signOut();
     setCurrentUser(null);
+    setShowAuth(true);
   };
 
   if (isLoading) {
@@ -60,25 +66,28 @@ function App() {
     );
   }
 
-  // Show authentication if user is not logged in
-  if (!currentUser) {
-    return (
-      <QueryClientProvider client={queryClient}>
-        <GuestAuth onAuthenticated={handleAuthenticated} />
-        <Toaster />
-      </QueryClientProvider>
-    );
-  }
-
-  // Show main app if user is authenticated
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
-        <div className="min-h-screen bg-background">
-          <Routes>
-            <Route path="/" element={<Index currentUser={currentUser} onSignOut={handleSignOut} />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+        <div className="min-h-screen bg-background relative">
+          {/* Main App - always rendered */}
+          <div className={showAuth ? 'blur-sm pointer-events-none' : ''}>
+            <Routes>
+              <Route path="/" element={
+                currentUser ? 
+                <Index currentUser={currentUser} onSignOut={handleSignOut} /> :
+                <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50" />
+              } />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </div>
+          
+          {/* Auth Overlay */}
+          {showAuth && (
+            <div className="fixed inset-0 z-50 bg-black/20 backdrop-blur-sm">
+              <GuestAuth onAuthenticated={handleAuthenticated} isOpen={showAuth} />
+            </div>
+          )}
         </div>
         <Toaster />
       </Router>
