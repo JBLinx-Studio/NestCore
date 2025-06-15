@@ -59,7 +59,7 @@ export function PersonForm({ person, onSave, onCancel }: PersonFormProps) {
             <SelectValue placeholder="Select role" />
           </SelectTrigger>
           <SelectContent>
-            {ROLES.filter(r => r.value && r.value.trim() !== "").map(r => (
+            {ROLES.map(r => (
               <SelectItem key={r.value} value={r.value}>
                 <span className="inline-flex items-center gap-1"><r.icon className="h-4 w-4" />{r.label}</span>
               </SelectItem>
