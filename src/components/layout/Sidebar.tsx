@@ -9,7 +9,8 @@ import {
   Zap,
   MessageSquare,
   Home,
-  TrendingUp
+  TrendingUp,
+  Briefcase
 } from "lucide-react";
 
 interface SidebarProps {
@@ -36,6 +37,12 @@ const navigationItems = [
     label: "Users Hub",
     icon: Users,
     description: "All Industry Professionals"
+  },
+  {
+    id: "work",
+    label: "Work",
+    icon: Briefcase,
+    description: "Professional Workspace"
   },
   {
     id: "utilities",
