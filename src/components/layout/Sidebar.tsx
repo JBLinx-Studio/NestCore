@@ -145,21 +145,28 @@ export const Sidebar = ({ open, activeTab, setActiveTab }: SidebarProps) => {
 
   return (
     <aside className={cn(
-      "fixed left-0 top-16 h-[calc(100vh-4rem)] bg-gradient-to-b from-white via-blue-50 to-purple-50 border-r border-gray-200 transition-all duration-300 z-30 shadow-xl overflow-hidden flex flex-col",
+      "fixed left-0 top-0 h-full bg-gradient-to-b from-white via-blue-50 to-purple-50 border-r border-gray-200 transition-all duration-300 z-30 shadow-xl overflow-hidden flex flex-col",
       open ? "w-64" : "w-16"
     )}>
-      {/* Scrollable navigation area */}
-      <div className="flex-1 overflow-y-auto pb-32">
-        <div className="p-4 space-y-2">
-          {/* NestCore Brand when collapsed */}
-          {!open && (
-            <div className="flex items-center justify-center mb-6">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                <Home className="h-5 w-5 text-white" />
-              </div>
+      {/* Header spacer */}
+      <div className="h-20 border-b border-gray-200 flex items-center justify-center">
+        {open ? (
+          <div className="flex items-center space-x-2 px-4">
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+              <Home className="h-5 w-5 text-white" />
             </div>
-          )}
-          
+            <span className="font-bold text-lg text-gray-800">NestCore</span>
+          </div>
+        ) : (
+          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+            <Home className="h-5 w-5 text-white" />
+          </div>
+        )}
+      </div>
+
+      {/* Scrollable navigation area */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="p-4 space-y-2">
           {Object.entries(groupedItems).map(([category, items]) => (
             <div key={category} className="space-y-1">
               {open && (
@@ -210,7 +217,7 @@ export const Sidebar = ({ open, activeTab, setActiveTab }: SidebarProps) => {
       
       {/* Fixed bottom stats section */}
       {open && (
-        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-purple-50 to-transparent">
+        <div className="p-4 bg-gradient-to-t from-purple-50 to-transparent border-t border-gray-200">
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-100">
               <div className="flex items-center space-x-2">
