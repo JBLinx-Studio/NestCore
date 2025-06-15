@@ -130,9 +130,13 @@ export const PropertyIntelligence = ({ selectedProperty }: PropertyIntelligenceP
     const landSize = estimateLandSize(location.displayName);
     const currentValue = estimatePropertyValue(location);
     
+    // Convert location.id to string and handle it properly
+    const locationIdString = String(location.id);
+    const idSuffix = locationIdString.length >= 6 ? locationIdString.slice(-6) : locationIdString.padStart(6, '0');
+    
     const extractedData: PropertyIntelligenceData = {
       erfNumber: `ERF ${Math.floor(Math.random() * 9999).toString().padStart(4, '0')}`,
-      titleDeedNumber: `T${location.id.slice(-6)}/2024`,
+      titleDeedNumber: `T${idSuffix}/2024`,
       propertyType,
       landSize,
       buildingSize: propertyType === 'Apartment' ? 0 : Math.floor(landSize * 0.3),
