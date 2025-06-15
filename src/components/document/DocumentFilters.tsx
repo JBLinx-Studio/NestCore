@@ -1,32 +1,29 @@
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import {
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { 
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { 
   Search, 
   Filter, 
   X, 
   Calendar as CalendarIcon,
-  Tag,
   SortAsc,
   SortDesc
 } from "lucide-react";
 import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { Document } from "./types";
 
 interface DocumentFiltersProps {
   searchTerm: string;
@@ -35,7 +32,7 @@ interface DocumentFiltersProps {
   selectedCategory: string;
   onCategoryChange: (category: string) => void;
   onFiltersChange: (filters: any) => void;
-  documents: any[];
+  documents: Document[];
 }
 
 export const DocumentFilters = ({
@@ -47,73 +44,81 @@ export const DocumentFilters = ({
   onFiltersChange,
   documents
 }: DocumentFiltersProps) => {
-  const [filters, setFilters] = useState({
-    status: '',
-    property: '',
-    tenant: '',
-    dateFrom: null as Date | null,
-    dateTo: null as Date | null,
-    tags: [] as string[],
-    sortBy: 'uploadDate',
-    sortOrder: 'desc'
-  });
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [dateFrom, setDateFrom] = useState<Date>();
+  const [dateTo, setDateTo] = useState<Date>();
+  const [selectedStatus, setSelectedStatus] = useState<string>("");
+  const [selectedProperty, setSelectedProperty] = useState<string>("");
+  const [selectedTenant, setSelectedTenant] = useState<string>("");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState<string>("uploadDate");
+  const [sortOrder, setSortOrder] = useState<string>("desc");
 
   // Extract unique values for filter options
-  const statuses = [...new Set(documents.map(doc => doc.status))];
-  const properties = [...new Set(documents.map(doc => doc.property))];
-  const tenants = [...new Set(documents.map(doc => doc.tenant).filter(t => t !== 'N/A'))];
+  const uniqueStatuses = [...new Set(documents.map(doc => doc.status))];
+  const uniqueProperties = [...new Set(documents.map(doc => doc.property))];
+  const uniqueTenants = [...new Set(documents.map(doc => doc.tenant).filter(t => t !== "N/A"))];
   const allTags = [...new Set(documents.flatMap(doc => doc.tags || []))];
 
-  const updateFilters = (newFilters: any) => {
-    const updatedFilters = { ...filters, ...newFilters };
-    setFilters(updatedFilters);
-    onFiltersChange(updatedFilters);
+  const applyFilters = () => {
+    const filters = {
+      dateFrom,
+      dateTo,
+      status: selectedStatus,
+      property: selectedProperty,
+      tenant: selectedTenant,
+      tags: selectedTags,
+      sortBy,
+      sortOrder
+    };
+    onFiltersChange(filters);
   };
 
   const clearFilters = () => {
-    const clearedFilters = {
-      status: '',
-      property: '',
-      tenant: '',
-      dateFrom: null,
-      dateTo: null,
-      tags: [],
-      sortBy: 'uploadDate',
-      sortOrder: 'desc'
-    };
-    setFilters(clearedFilters);
-    onFiltersChange(clearedFilters);
-    onSearchChange('');
-    onCategoryChange('all');
-  };
-
-  const addTag = (tag: string) => {
-    if (!filters.tags.includes(tag)) {
-      updateFilters({ tags: [...filters.tags, tag] });
-    }
+    setDateFrom(undefined);
+    setDateTo(undefined);
+    setSelectedStatus("");
+    setSelectedProperty("");
+    setSelectedTenant("");
+    setSelectedTags([]);
+    setSortBy("uploadDate");
+    setSortOrder("desc");
+    onSearchChange("");
+    onCategoryChange("all");
+    onFiltersChange({
+      sortBy: "uploadDate",
+      sortOrder: "desc"
+    });
   };
 
   const removeTag = (tagToRemove: string) => {
-    updateFilters({ tags: filters.tags.filter(tag => tag !== tagToRemove) });
+    const newTags = selectedTags.filter(tag => tag !== tagToRemove);
+    setSelectedTags(newTags);
+    applyFilters();
   };
 
-  const hasActiveFilters = 
-    searchTerm || 
-    selectedCategory !== 'all' || 
-    filters.status || 
-    filters.property || 
-    filters.tenant || 
-    filters.dateFrom || 
-    filters.dateTo || 
-    filters.tags.length > 0;
+  const addTag = (tag: string) => {
+    if (!selectedTags.includes(tag)) {
+      const newTags = [...selectedTags, tag];
+      setSelectedTags(newTags);
+    }
+  };
+
+  const activeFiltersCount = [
+    dateFrom,
+    dateTo,
+    selectedStatus,
+    selectedProperty,
+    selectedTenant,
+    selectedTags.length > 0
+  ].filter(Boolean).length;
 
   return (
     <div className="space-y-4">
-      {/* Main Search Bar */}
-      <div className="flex gap-2">
+      {/* Basic Search and Sort */}
+      <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
           <Input
             placeholder="Search documents, properties, tenants, or tags..."
             value={searchTerm}
@@ -121,42 +126,121 @@ export const DocumentFilters = ({
             className="pl-10"
           />
         </div>
-        <Button
-          variant="outline"
-          onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-          className={showAdvancedFilters ? "bg-blue-50 border-blue-200" : ""}
-        >
-          <Filter className="h-4 w-4 mr-2" />
-          Filters
-          {hasActiveFilters && (
-            <Badge variant="secondary" className="ml-2 h-5 w-5 p-0 flex items-center justify-center">
-              !
-            </Badge>
-          )}
-        </Button>
-        {hasActiveFilters && (
-          <Button variant="ghost" onClick={clearFilters}>
-            <X className="h-4 w-4 mr-2" />
-            Clear
+        <div className="flex gap-2">
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent className="bg-white">
+              <SelectItem value="uploadDate">Upload Date</SelectItem>
+              <SelectItem value="name">Name</SelectItem>
+              <SelectItem value="size">Size</SelectItem>
+              <SelectItem value="status">Status</SelectItem>
+              <SelectItem value="category">Category</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => {
+              const newOrder = sortOrder === "asc" ? "desc" : "asc";
+              setSortOrder(newOrder);
+              applyFilters();
+            }}
+          >
+            {sortOrder === "asc" ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
           </Button>
-        )}
+          <Button
+            variant="outline"
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className={cn(
+              "relative",
+              activeFiltersCount > 0 && "border-blue-500 text-blue-600"
+            )}
+          >
+            <Filter className="mr-2 h-4 w-4" />
+            Filters
+            {activeFiltersCount > 0 && (
+              <Badge 
+                variant="destructive" 
+                className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
+              >
+                {activeFiltersCount}
+              </Badge>
+            )}
+          </Button>
+        </div>
       </div>
 
-      {/* Advanced Filters Panel */}
-      {showAdvancedFilters && (
+      {/* Advanced Filters */}
+      {showAdvanced && (
         <Card>
-          <CardContent className="p-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <CardHeader>
+            <CardTitle className="text-lg">Advanced Filters</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* Date Range */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Upload Date Range</label>
+                <div className="flex gap-2">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "flex-1 justify-start text-left font-normal",
+                          !dateFrom && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {dateFrom ? format(dateFrom, "MMM dd") : "From"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 bg-white" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={dateFrom}
+                        onSelect={setDateFrom}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "flex-1 justify-start text-left font-normal",
+                          !dateTo && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {dateTo ? format(dateTo, "MMM dd") : "To"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 bg-white" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={dateTo}
+                        onSelect={setDateTo}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+
               {/* Status Filter */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Status</label>
-                <Select value={filters.status} onValueChange={(value) => updateFilters({ status: value })}>
+                <label className="text-sm font-medium">Status</label>
+                <Select value={selectedStatus} onValueChange={setSelectedStatus}>
                   <SelectTrigger>
                     <SelectValue placeholder="All statuses" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white">
                     <SelectItem value="">All statuses</SelectItem>
-                    {statuses.map(status => (
+                    {uniqueStatuses.map(status => (
                       <SelectItem key={status} value={status}>
                         {status.charAt(0).toUpperCase() + status.slice(1)}
                       </SelectItem>
@@ -167,14 +251,14 @@ export const DocumentFilters = ({
 
               {/* Property Filter */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Property</label>
-                <Select value={filters.property} onValueChange={(value) => updateFilters({ property: value })}>
+                <label className="text-sm font-medium">Property</label>
+                <Select value={selectedProperty} onValueChange={setSelectedProperty}>
                   <SelectTrigger>
                     <SelectValue placeholder="All properties" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white">
                     <SelectItem value="">All properties</SelectItem>
-                    {properties.map(property => (
+                    {uniqueProperties.map(property => (
                       <SelectItem key={property} value={property}>
                         {property}
                       </SelectItem>
@@ -185,14 +269,14 @@ export const DocumentFilters = ({
 
               {/* Tenant Filter */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Tenant</label>
-                <Select value={filters.tenant} onValueChange={(value) => updateFilters({ tenant: value })}>
+                <label className="text-sm font-medium">Tenant</label>
+                <Select value={selectedTenant} onValueChange={setSelectedTenant}>
                   <SelectTrigger>
                     <SelectValue placeholder="All tenants" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white">
                     <SelectItem value="">All tenants</SelectItem>
-                    {tenants.map(tenant => (
+                    {uniqueTenants.map(tenant => (
                       <SelectItem key={tenant} value={tenant}>
                         {tenant}
                       </SelectItem>
@@ -200,158 +284,92 @@ export const DocumentFilters = ({
                   </SelectContent>
                 </Select>
               </div>
+            </div>
 
-              {/* Sort Options */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">Sort By</label>
-                <div className="flex gap-2">
-                  <Select value={filters.sortBy} onValueChange={(value) => updateFilters({ sortBy: value })}>
-                    <SelectTrigger className="flex-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="uploadDate">Upload Date</SelectItem>
-                      <SelectItem value="name">Name</SelectItem>
-                      <SelectItem value="size">Size</SelectItem>
-                      <SelectItem value="property">Property</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => updateFilters({ 
-                      sortOrder: filters.sortOrder === 'asc' ? 'desc' : 'asc' 
-                    })}
+            {/* Tags */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Tags</label>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {allTags.map(tag => (
+                  <Badge
+                    key={tag}
+                    variant={selectedTags.includes(tag) ? "default" : "outline"}
+                    className="cursor-pointer"
+                    onClick={() => {
+                      if (selectedTags.includes(tag)) {
+                        removeTag(tag);
+                      } else {
+                        addTag(tag);
+                      }
+                    }}
                   >
-                    {filters.sortOrder === 'asc' ? 
-                      <SortAsc className="h-4 w-4" /> : 
-                      <SortDesc className="h-4 w-4" />
-                    }
-                  </Button>
-                </div>
+                    {tag}
+                  </Badge>
+                ))}
               </div>
-
-              {/* Date Range */}
-              <div className="space-y-2 md:col-span-2">
-                <label className="text-sm font-medium text-gray-700">Date Range</label>
-                <div className="flex gap-2">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className="flex-1 justify-start text-left font-normal">
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {filters.dateFrom ? format(filters.dateFrom, "PPP") : "From date"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={filters.dateFrom}
-                        onSelect={(date) => updateFilters({ dateFrom: date })}
-                        initialFocus
+              {selectedTags.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {selectedTags.map(tag => (
+                    <Badge key={tag} variant="secondary" className="flex items-center gap-1">
+                      {tag}
+                      <X
+                        className="h-3 w-3 cursor-pointer"
+                        onClick={() => removeTag(tag)}
                       />
-                    </PopoverContent>
-                  </Popover>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className="flex-1 justify-start text-left font-normal">
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {filters.dateTo ? format(filters.dateTo, "PPP") : "To date"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={filters.dateTo}
-                        onSelect={(date) => updateFilters({ dateTo: date })}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
+                    </Badge>
+                  ))}
                 </div>
-              </div>
+              )}
+            </div>
 
-              {/* Tags */}
-              <div className="space-y-2 md:col-span-2">
-                <label className="text-sm font-medium text-gray-700">Tags</label>
-                <div className="space-y-2">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full justify-start">
-                        <Tag className="mr-2 h-4 w-4" />
-                        Add tag filter
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-80">
-                      <div className="grid grid-cols-2 gap-2">
-                        {allTags.map(tag => (
-                          <Button
-                            key={tag}
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => addTag(tag)}
-                            disabled={filters.tags.includes(tag)}
-                            className="justify-start"
-                          >
-                            {tag}
-                          </Button>
-                        ))}
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                  
-                  {filters.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1">
-                      {filters.tags.map(tag => (
-                        <Badge key={tag} variant="secondary" className="cursor-pointer">
-                          {tag}
-                          <X 
-                            className="ml-1 h-3 w-3" 
-                            onClick={() => removeTag(tag)}
-                          />
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
+            {/* Action Buttons */}
+            <div className="flex gap-2 pt-4 border-t">
+              <Button onClick={applyFilters}>Apply Filters</Button>
+              <Button variant="outline" onClick={clearFilters}>
+                Clear All
+              </Button>
             </div>
           </CardContent>
         </Card>
       )}
 
       {/* Active Filters Display */}
-      {hasActiveFilters && (
-        <div className="flex flex-wrap gap-2">
-          {searchTerm && (
-            <Badge variant="outline">
-              Search: {searchTerm}
-              <X className="ml-1 h-3 w-3 cursor-pointer" onClick={() => onSearchChange('')} />
+      {activeFiltersCount > 0 && (
+        <div className="flex flex-wrap gap-2 items-center">
+          <span className="text-sm font-medium">Active filters:</span>
+          {dateFrom && (
+            <Badge variant="secondary" className="flex items-center gap-1">
+              From: {format(dateFrom, "MMM dd, yyyy")}
+              <X className="h-3 w-3 cursor-pointer" onClick={() => setDateFrom(undefined)} />
             </Badge>
           )}
-          {selectedCategory !== 'all' && (
-            <Badge variant="outline">
-              Category: {selectedCategory}
-              <X className="ml-1 h-3 w-3 cursor-pointer" onClick={() => onCategoryChange('all')} />
+          {dateTo && (
+            <Badge variant="secondary" className="flex items-center gap-1">
+              To: {format(dateTo, "MMM dd, yyyy")}
+              <X className="h-3 w-3 cursor-pointer" onClick={() => setDateTo(undefined)} />
             </Badge>
           )}
-          {filters.status && (
-            <Badge variant="outline">
-              Status: {filters.status}
-              <X className="ml-1 h-3 w-3 cursor-pointer" onClick={() => updateFilters({ status: '' })} />
+          {selectedStatus && (
+            <Badge variant="secondary" className="flex items-center gap-1">
+              Status: {selectedStatus}
+              <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedStatus("")} />
             </Badge>
           )}
-          {filters.property && (
-            <Badge variant="outline">
-              Property: {filters.property}
-              <X className="ml-1 h-3 w-3 cursor-pointer" onClick={() => updateFilters({ property: '' })} />
+          {selectedProperty && (
+            <Badge variant="secondary" className="flex items-center gap-1">
+              Property: {selectedProperty}
+              <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedProperty("")} />
             </Badge>
           )}
-          {filters.tenant && (
-            <Badge variant="outline">
-              Tenant: {filters.tenant}
-              <X className="ml-1 h-3 w-3 cursor-pointer" onClick={() => updateFilters({ tenant: '' })} />
+          {selectedTenant && (
+            <Badge variant="secondary" className="flex items-center gap-1">
+              Tenant: {selectedTenant}
+              <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedTenant("")} />
             </Badge>
           )}
+          <Button variant="ghost" size="sm" onClick={clearFilters}>
+            Clear all
+          </Button>
         </div>
       )}
     </div>

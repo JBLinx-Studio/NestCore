@@ -1,35 +1,7 @@
 
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { 
-  FileText, 
-  Upload,
-  Search,
-  Download,
-  Eye,
-  Calendar,
-  User,
-  Building,
-  Folder,
-  Image,
-  PlusCircle,
-  Trash2,
-  Edit,
-  Share
-} from "lucide-react";
-import { DocumentActions, DocumentItemActions } from "./DocumentActions";
+import { useState, useCallback } from "react";
 import { toast } from "sonner";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { DocumentWorkflow } from "./DocumentWorkflow";
+import { DocumentActions } from "./DocumentActions";
 import { CategoriesSidebar } from "./CategoriesSidebar";
 import { DocumentCard } from "./DocumentCard";
 import { DropZone } from "./DropZone";
@@ -38,9 +10,11 @@ import { FileUploadProgress } from "./FileUploadProgress";
 import { ConfirmationDialog } from "./ConfirmationDialog";
 import { DocumentAnalytics } from "./DocumentAnalytics";
 import { DocumentFilters } from "./DocumentFilters";
-import { getFileIcon, getStatusColor } from "./categories";
+import { DocumentWorkflow } from "./DocumentWorkflow";
 import { validateFiles, getFileCategory, formatFileSize } from "./fileValidation";
 import { Document } from "./types";
+import { Button } from "@/components/ui/button";
+import { FileText, Upload } from "lucide-react";
 
 interface UploadFile {
   file: File;
@@ -53,12 +27,14 @@ export const DocumentManager = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedDocumentIds, setSelectedDocumentIds] = useState<number[]>([]);
-  const [viewingDocument, setViewingDocument] = useState<Document | null>(null);
-  const [showDocumentView, setShowDocumentView] = useState(false);
   const [uploadingFiles, setUploadingFiles] = useState<UploadFile[]>([]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<number | null>(null);
-  const [advancedFilters, setAdvancedFilters] = useState<any>({});
+  const [advancedFilters, setAdvancedFilters] = useState<any>({
+    sortBy: 'uploadDate',
+    sortOrder: 'desc'
+  });
+  
   const [documents, setDocuments] = useState<Document[]>([
     {
       id: 1,
@@ -152,10 +128,10 @@ export const DocumentManager = () => {
     }
   ]);
 
-  const simulateFileUpload = (file: File): Promise<void> => {
+  const simulateFileUpload = useCallback((file: File): Promise<void> => {
     return new Promise((resolve, reject) => {
       const uploadTime = Math.random() * 3000 + 1000;
-      const shouldFail = Math.random() < 0.1;
+      const shouldFail = Math.random() < 0.05; // 5% failure rate
       
       const interval = setInterval(() => {
         setUploadingFiles(current => 
@@ -191,9 +167,9 @@ export const DocumentManager = () => {
         }
       }, uploadTime);
     });
-  };
+  }, []);
 
-  const handleUpload = async (file: File) => {
+  const handleUpload = useCallback(async (file: File) => {
     const validation = validateFiles([file]);
     
     if (!validation.isValid) {
@@ -240,9 +216,9 @@ export const DocumentManager = () => {
     } catch (error) {
       toast.error(`Failed to upload: ${file.name}`);
     }
-  };
+  }, [simulateFileUpload]);
 
-  const handleFilesDropped = (files: File[]) => {
+  const handleFilesDropped = useCallback((files: File[]) => {
     const validation = validateFiles(files);
     
     if (!validation.isValid) {
@@ -256,13 +232,13 @@ export const DocumentManager = () => {
 
     files.forEach(file => handleUpload(file));
     toast.success(`Started uploading ${files.length} file${files.length > 1 ? 's' : ''}!`);
-  };
+  }, [handleUpload]);
 
-  const handleRemoveUploadingFile = (index: number) => {
+  const handleRemoveUploadingFile = useCallback((index: number) => {
     setUploadingFiles(current => current.filter((_, i) => i !== index));
-  };
+  }, []);
 
-  const handleRetryUpload = (index: number) => {
+  const handleRetryUpload = useCallback((index: number) => {
     const uploadFile = uploadingFiles[index];
     if (uploadFile) {
       setUploadingFiles(current => 
@@ -276,13 +252,13 @@ export const DocumentManager = () => {
         // Error handling is already in simulateFileUpload
       });
     }
-  };
+  }, [uploadingFiles, simulateFileUpload]);
 
-  const handleBulkUpload = (files: FileList) => {
+  const handleBulkUpload = useCallback((files: FileList) => {
     Array.from(files).forEach(file => handleUpload(file));
-  };
+  }, [handleUpload]);
 
-  const handleBulkAction = (action: string, documentIds: number[]) => {
+  const handleBulkAction = useCallback((action: string, documentIds: number[]) => {
     const affectedDocs = documents.filter(doc => documentIds.includes(doc.id));
     
     switch (action) {
@@ -327,9 +303,9 @@ export const DocumentManager = () => {
         }
         break;
     }
-  };
+  }, [documents]);
 
-  const handleCreateFolder = (name: string) => {
+  const handleCreateFolder = useCallback((name: string) => {
     const newFolder: Document = {
       id: Date.now(),
       name: name,
@@ -345,17 +321,17 @@ export const DocumentManager = () => {
       tags: ["folder", "organization"],
       itemCount: 0
     };
-    setDocuments([newFolder, ...documents]);
+    setDocuments(prev => [newFolder, ...prev]);
     toast.success(`Created folder: ${name}`);
-  };
+  }, []);
 
-  const handleViewDocument = (document: any) => {
-    setViewingDocument(document);
-    setShowDocumentView(true);
+  const handleViewDocument = useCallback((document: Document) => {
     toast.info(`Opening ${document.name} in viewer`);
-  };
+    // In real app, would open document viewer
+    window.open(document.url, '_blank');
+  }, []);
 
-  const handleDownloadDocument = (document: any) => {
+  const handleDownloadDocument = useCallback((document: Document) => {
     toast.success(`Downloading ${document.name}...`);
     const link = document.createElement('a');
     link.href = document.url || '#';
@@ -363,33 +339,30 @@ export const DocumentManager = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
+  }, []);
 
-  const handleDeleteDocument = (docId: number) => {
+  const handleDeleteDocument = useCallback((docId: number) => {
     setDocumentToDelete(docId);
     setShowDeleteConfirm(true);
-  };
+  }, []);
 
-  const confirmDelete = () => {
+  const confirmDelete = useCallback(() => {
     if (documentToDelete) {
       setDocuments(documents.filter(doc => doc.id !== documentToDelete));
       toast.success("Document deleted successfully");
       setShowDeleteConfirm(false);
       setDocumentToDelete(null);
-      if (viewingDocument?.id === documentToDelete) {
-        setShowDocumentView(false);
-      }
     }
-  };
+  }, [documentToDelete, documents]);
 
-  const handleRenameDocument = (docId: number, newName: string) => {
+  const handleRenameDocument = useCallback((docId: number, newName: string) => {
     setDocuments(documents.map(doc => 
       doc.id === docId ? { ...doc, name: newName } : doc
     ));
     toast.success("Document renamed successfully");
-  };
+  }, [documents]);
 
-  const handleShareDocument = (document: any) => {
+  const handleShareDocument = useCallback((document: Document) => {
     const shareData = {
       title: document.name,
       text: `Document: ${document.name}\nProperty: ${document.property}\nCategory: ${document.category}`,
@@ -405,16 +378,15 @@ export const DocumentManager = () => {
     } else {
       fallbackShare(document);
     }
-  };
+  }, []);
 
-  const fallbackShare = (document: any) => {
+  const fallbackShare = useCallback((document: Document) => {
     navigator.clipboard.writeText(`Document: ${document.name} - ${document.property}`);
     toast.success("Document details copied to clipboard!");
-  };
+  }, []);
 
-  const applyFilters = (docs: any[]) => {
+  const applyFilters = useCallback((docs: Document[]) => {
     return docs.filter(doc => {
-      // Basic filters
       const matchesSearch = doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            doc.property.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            doc.tenant.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -423,7 +395,6 @@ export const DocumentManager = () => {
       const matchesCategory = selectedCategory === "all" || 
                              doc.category.toLowerCase() === selectedCategory;
 
-      // Advanced filters
       const matchesStatus = !advancedFilters.status || doc.status === advancedFilters.status;
       const matchesProperty = !advancedFilters.property || doc.property === advancedFilters.property;
       const matchesTenant = !advancedFilters.tenant || doc.tenant === advancedFilters.tenant;
@@ -438,22 +409,22 @@ export const DocumentManager = () => {
              matchesProperty && matchesTenant && matchesDateRange && matchesTags;
     }).sort((a, b) => {
       const { sortBy, sortOrder } = advancedFilters;
-      const aValue = a[sortBy] || '';
-      const bValue = b[sortBy] || '';
+      const aValue = a[sortBy as keyof Document] || '';
+      const bValue = b[sortBy as keyof Document] || '';
       
       if (sortBy === 'uploadDate') {
-        const aDate = new Date(aValue).getTime();
-        const bDate = new Date(bValue).getTime();
+        const aDate = new Date(String(aValue)).getTime();
+        const bDate = new Date(String(bValue)).getTime();
         return sortOrder === 'asc' ? aDate - bDate : bDate - aDate;
       }
       
       if (sortOrder === 'asc') {
-        return aValue.localeCompare(bValue);
+        return String(aValue).localeCompare(String(bValue));
       } else {
-        return bValue.localeCompare(aValue);
+        return String(bValue).localeCompare(String(aValue));
       }
     });
-  };
+  }, [searchTerm, selectedCategory, advancedFilters]);
 
   const categories = [
     { id: "all", name: "All Documents", count: documents.length },
@@ -473,7 +444,7 @@ export const DocumentManager = () => {
           <h2 className="text-2xl font-bold text-gray-900">Document Manager</h2>
           <p className="text-gray-600">Organize and manage all your property-related documents</p>
         </div>
-        <DocumentActions onUpload={handleUpload} onCreateFolder={() => {}} />
+        <DocumentActions onUpload={handleUpload} onCreateFolder={handleCreateFolder} />
       </div>
 
       {/* Document Analytics */}
@@ -490,7 +461,7 @@ export const DocumentManager = () => {
       <DocumentWorkflow 
         documents={documents}
         onUpload={handleBulkUpload}
-        onCreateFolder={() => {}}
+        onCreateFolder={handleCreateFolder}
         onBulkAction={handleBulkAction}
       />
 
@@ -538,11 +509,11 @@ export const DocumentManager = () => {
                     setSelectedDocumentIds(selectedDocumentIds.filter(id => id !== doc.id));
                   }
                 }}
-                onView={() => {}}
-                onDownload={() => {}}
-                onShare={() => {}}
-                onDelete={() => {}}
-                onRename={() => {}}
+                onView={handleViewDocument}
+                onDownload={handleDownloadDocument}
+                onShare={handleShareDocument}
+                onDelete={handleDeleteDocument}
+                onRename={handleRenameDocument}
               />
             ))}
           </div>
@@ -578,56 +549,10 @@ export const DocumentManager = () => {
         onOpenChange={setShowDeleteConfirm}
         title="Delete Document"
         description="Are you sure you want to delete this document? This action cannot be undone."
-        onConfirm={() => {}}
+        onConfirm={confirmDelete}
         confirmText="Delete"
         destructive={true}
       />
     </DropZone>
   );
-};
-
-// Missing function implementations
-const simulateFileUpload = (file: File): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    const uploadTime = Math.random() * 3000 + 1000;
-    const shouldFail = Math.random() < 0.1;
-    
-    setTimeout(() => {
-      if (shouldFail) {
-        reject(new Error('Upload failed'));
-      } else {
-        resolve();
-      }
-    }, uploadTime);
-  });
-};
-
-const handleFilesDropped = (files: File[]) => {
-  // Implementation for handling dropped files
-  console.log('Files dropped:', files);
-};
-
-const handleRemoveUploadingFile = (index: number) => {
-  // Implementation for removing uploading file
-  console.log('Remove file at index:', index);
-};
-
-const handleRetryUpload = (index: number) => {
-  // Implementation for retrying upload
-  console.log('Retry upload at index:', index);
-};
-
-const handleBulkUpload = (files: FileList) => {
-  // Implementation for bulk upload
-  console.log('Bulk upload:', files);
-};
-
-const handleBulkAction = (action: string, documentIds: number[]) => {
-  // Implementation for bulk actions
-  console.log('Bulk action:', action, documentIds);
-};
-
-const applyFilters = (docs: Document[]) => {
-  // Implementation for applying filters
-  return docs;
 };
