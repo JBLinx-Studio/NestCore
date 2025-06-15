@@ -42,14 +42,14 @@ interface PropertyValuation {
   currentValue: number;
   previousValue: number;
   valueDate: string;
-  valuationMethod: 'automated' | 'comparative' | 'professional';
+  valuationMethod: 'automated' | 'comparative' | 'professional' | 'ai_enhanced';
   confidence: number;
   pricePerSqm: number;
 }
 
 interface PropertyHistory {
   date: string;
-  event: 'sale' | 'transfer' | 'bond' | 'subdivision';
+  event: 'sale' | 'transfer' | 'bond' | 'subdivision' | 'inheritance' | 'donation';
   price?: number;
   details: string;
   verified: boolean;
@@ -184,7 +184,7 @@ export const PropertyIntelligence = ({ selectedProperty }: PropertyIntelligenceP
         
         history: comprehensiveData.ownership.ownershipHistory.map(h => ({
           date: h.date,
-          event: h.transferType,
+          event: h.transferType as 'sale' | 'transfer' | 'bond' | 'subdivision' | 'inheritance' | 'donation',
           price: h.price,
           details: `${h.transferType} from ${h.previousOwner}`,
           verified: true
