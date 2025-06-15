@@ -21,6 +21,7 @@ import {
 import { toast } from "sonner";
 import { openStreetMapService, PropertyLocation } from "@/services/OpenStreetMapService";
 import { PropertyWeather } from "./PropertyWeather";
+import { PropertyAgentIntelligence } from "./PropertyAgentIntelligence";
 
 interface PropertyIntelligenceProps {
   selectedProperty?: PropertyLocation | null;
@@ -347,6 +348,11 @@ export const PropertyIntelligence = ({ selectedProperty }: PropertyIntelligenceP
           </div>
         </CardContent>
       </Card>
+
+      {/* Agent Intelligence Section */}
+      {selectedProperty && (
+        <PropertyAgentIntelligence property={selectedProperty} />
+      )}
 
       {/* Weather Section */}
       {selectedProperty && (
