@@ -8,14 +8,13 @@ import {
   Search, 
   MapPin, 
   Building, 
-  User, 
-  Phone, 
-  Mail, 
   Calendar,
   DollarSign,
   Home,
   Loader2,
-  AlertTriangle
+  AlertTriangle,
+  CheckCircle,
+  XCircle
 } from "lucide-react";
 import { openStreetMapService, PropertyLocation } from "@/services/OpenStreetMapService";
 import { toast } from "sonner";
@@ -30,7 +29,7 @@ interface PropertyDetails {
   yearBuilt?: number;
   marketValue?: number;
   rates?: number;
-  isExample: boolean; // Flag to indicate this is example data
+  isExample: boolean;
 }
 
 interface SearchResult {
@@ -51,15 +50,17 @@ export const PropertySearch = () => {
     }
 
     setIsSearching(true);
+    setResults([]);
+    setSelectedResult(null);
+
     try {
       const locations = await openStreetMapService.searchProperties(searchQuery, 10);
       
-      // Use real location data with example property details
       const searchResults: SearchResult[] = locations.map(location => ({
         location,
         details: {
           propertyType: 'Example Property Type',
-          isExample: true // All property details are examples for now
+          isExample: true
         }
       }));
 
@@ -78,6 +79,12 @@ export const PropertySearch = () => {
     }
   };
 
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Search Header */}
@@ -85,7 +92,7 @@ export const PropertySearch = () => {
         <CardHeader>
           <CardTitle className="flex items-center space-x-2 text-2xl">
             <Search className="h-6 w-6 text-blue-600" />
-            <span>Real Property Location Search</span>
+            <span>Property Location Search</span>
           </CardTitle>
           <CardDescription className="text-lg">
             Search for real property locations using OpenStreetMap data
@@ -98,7 +105,7 @@ export const PropertySearch = () => {
                 placeholder="Enter address, suburb, or landmark in South Africa..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                onKeyPress={handleKeyPress}
                 className="text-lg h-12"
               />
             </div>
@@ -113,18 +120,42 @@ export const PropertySearch = () => {
               ) : (
                 <Search className="h-4 w-4 mr-2" />
               )}
-              Search Real Locations
+              Search
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Results */}
+      {/* API Status */}
+      <Card className="border-green-200 bg-green-50">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <CheckCircle className="h-5 w-5 text-green-600" />
+              <span className="font-medium text-green-800">OpenStreetMap API</span>
+              <Badge className="bg-green-100 text-green-800">Active & Free</Badge>
+            </div>
+            <span className="text-sm text-green-600">Real location data available</span>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Results Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Search Results List */}
         <div className="space-y-4">
-          <h3 className="text-xl font-semibold">Real Location Results ({results.length})</h3>
+          <h3 className="text-xl font-semibold flex items-center">
+            <MapPin className="h-5 w-5 mr-2 text-blue-600" />
+            Search Results ({results.length})
+          </h3>
           
+          {isSearching && (
+            <Card className="p-8 text-center">
+              <Loader2 className="h-12 w-12 text-blue-500 mx-auto mb-4 animate-spin" />
+              <p className="text-gray-600">Searching OpenStreetMap...</p>
+            </Card>
+          )}
+
           {results.length === 0 && !isSearching && (
             <Card className="p-8 text-center">
               <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -135,8 +166,8 @@ export const PropertySearch = () => {
           {results.map((result, index) => (
             <Card 
               key={index} 
-              className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
-                selectedResult === result ? 'ring-2 ring-blue-500 bg-blue-50' : ''
+              className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-2 ${
+                selectedResult === result ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'
               }`}
               onClick={() => setSelectedResult(result)}
             >
@@ -145,14 +176,14 @@ export const PropertySearch = () => {
                   <div className="flex-1">
                     <div className="flex items-center space-x-2 mb-2">
                       <Building className="h-4 w-4 text-blue-600" />
-                      <span className="font-semibold">Real Location from OSM</span>
-                      <Badge variant="outline" className="bg-green-50 text-green-700">
+                      <span className="font-semibold">Real Location</span>
+                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
                         <MapPin className="h-3 w-3 mr-1" />
-                        Real Coordinates
+                        Verified
                       </Badge>
                     </div>
                     
-                    <p className="text-sm text-gray-600 mb-2">{result.location.displayName}</p>
+                    <p className="text-sm text-gray-600 mb-2 line-clamp-2">{result.location.displayName}</p>
                     
                     <div className="flex items-center space-x-4 text-sm text-gray-500">
                       <span>Lat: {result.location.lat.toFixed(6)}</span>
@@ -160,21 +191,25 @@ export const PropertySearch = () => {
                     </div>
                   </div>
                   
-                  <div className="text-right">
-                    <Badge variant="secondary" className="bg-yellow-50 text-yellow-700">
-                      <AlertTriangle className="h-3 w-3 mr-1" />
-                      Property Details: Example Only
-                    </Badge>
-                  </div>
+                  {selectedResult === result && (
+                    <div className="text-right">
+                      <Badge className="bg-blue-100 text-blue-700">
+                        Selected
+                      </Badge>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
 
-        {/* Property Details */}
+        {/* Location Details */}
         <div className="space-y-4">
-          <h3 className="text-xl font-semibold">Location Details</h3>
+          <h3 className="text-xl font-semibold flex items-center">
+            <Home className="h-5 w-5 mr-2 text-blue-600" />
+            Location Details
+          </h3>
           
           {!selectedResult ? (
             <Card className="p-8 text-center">
@@ -184,57 +219,68 @@ export const PropertySearch = () => {
           ) : (
             <div className="space-y-4">
               {/* Real Location Info */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <MapPin className="h-5 w-5 text-green-600" />
-                    <span>Real Location Data (OpenStreetMap)</span>
+              <Card className="border-green-200">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center space-x-2 text-lg">
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                    <span>Verified Location Data</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="text-sm">
-                    <span className="font-medium">Full Address:</span> {selectedResult.location.displayName}
+                    <span className="font-medium text-gray-700">Address:</span>
+                    <p className="text-gray-900 mt-1">{selectedResult.location.displayName}</p>
                   </div>
+                  
                   <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div><span className="font-medium">Latitude:</span> {selectedResult.location.lat.toFixed(6)}</div>
-                    <div><span className="font-medium">Longitude:</span> {selectedResult.location.lon.toFixed(6)}</div>
+                    <div>
+                      <span className="font-medium text-gray-700">Latitude:</span>
+                      <p className="text-gray-900">{selectedResult.location.lat.toFixed(6)}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-700">Longitude:</span>
+                      <p className="text-gray-900">{selectedResult.location.lon.toFixed(6)}</p>
+                    </div>
                   </div>
                   
                   {selectedResult.location.municipality && (
                     <div className="text-sm">
-                      <span className="font-medium">Municipality:</span> {selectedResult.location.municipality}
+                      <span className="font-medium text-gray-700">Municipality:</span>
+                      <p className="text-gray-900">{selectedResult.location.municipality}</p>
                     </div>
                   )}
                   
                   {selectedResult.location.province && (
                     <div className="text-sm">
-                      <span className="font-medium">Province:</span> {selectedResult.location.province}
+                      <span className="font-medium text-gray-700">Province:</span>
+                      <p className="text-gray-900">{selectedResult.location.province}</p>
                     </div>
                   )}
                   
                   {selectedResult.location.postalCode && (
                     <div className="text-sm">
-                      <span className="font-medium">Postal Code:</span> {selectedResult.location.postalCode}
+                      <span className="font-medium text-gray-700">Postal Code:</span>
+                      <p className="text-gray-900">{selectedResult.location.postalCode}</p>
                     </div>
                   )}
                 </CardContent>
               </Card>
 
-              {/* Example Property Info Notice */}
+              {/* Property Details Notice */}
               <Card className="border-yellow-200 bg-yellow-50">
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2 text-yellow-800">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center space-x-2 text-lg text-yellow-800">
                     <AlertTriangle className="h-5 w-5" />
                     <span>Property Details - Example Only</span>
                   </CardTitle>
                   <CardDescription className="text-yellow-700">
-                    Property ownership and detail APIs require paid subscriptions. The location data above is real from OpenStreetMap.
+                    Property ownership and detail APIs require paid subscriptions. Location data above is real.
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent>
                   <div className="text-sm text-yellow-800">
-                    <p><strong>To get real property data, you would need:</strong></p>
-                    <ul className="list-disc list-inside mt-2 space-y-1">
+                    <p className="font-medium mb-2">To get real property data, you would need:</p>
+                    <ul className="list-disc list-inside space-y-1">
                       <li>Lightstone Property API (paid)</li>
                       <li>Property24 API (paid)</li>
                       <li>SA Deeds Office API access</li>
@@ -244,25 +290,36 @@ export const PropertySearch = () => {
                 </CardContent>
               </Card>
 
-              {/* API Integration Status */}
+              {/* Integration Status */}
               <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center space-x-2 text-lg">
                     <Building className="h-5 w-5" />
                     <span>Available Integrations</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between p-2 bg-green-50 rounded">
-                    <span className="text-sm font-medium">OpenStreetMap</span>
+                  <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+                    <div className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <span className="text-sm font-medium">OpenStreetMap</span>
+                    </div>
                     <Badge className="bg-green-100 text-green-800">Active & Free</Badge>
                   </div>
-                  <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                    <span className="text-sm font-medium">Property Ownership APIs</span>
+                  
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="flex items-center space-x-2">
+                      <XCircle className="h-4 w-4 text-gray-400" />
+                      <span className="text-sm font-medium">Property Ownership APIs</span>
+                    </div>
                     <Badge variant="secondary">Requires Setup</Badge>
                   </div>
-                  <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                    <span className="text-sm font-medium">Deeds Office API</span>
+                  
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="flex items-center space-x-2">
+                      <XCircle className="h-4 w-4 text-gray-400" />
+                      <span className="text-sm font-medium">Deeds Office API</span>
+                    </div>
                     <Badge variant="secondary">Limited Access</Badge>
                   </div>
                 </CardContent>

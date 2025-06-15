@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -101,13 +102,12 @@ export const PropertyManager = () => {
   const [editingProperty, setEditingProperty] = useState<any>(null);
   const [viewingProperty, setViewingProperty] = useState<any>(null);
   const [showPropertyView, setShowPropertyView] = useState(false);
-  const [priceValuation, setPriceValuation] = useState<{ [id: number]: { current: number; list: number; lastSold: number; valuationDoc?: { url: string, name: string } } }>({});
   const [showSettings, setShowSettings] = useState(false);
   const [activeTab, setActiveTab] = useState("portfolio");
 
   // Settings state
-  const [currency, setCurrency] = useState("ZAR"); // Default Rand
-  const [metric, setMetric] = useState("metric");  // Default metric
+  const [currency, setCurrency] = useState("ZAR");
+  const [metric, setMetric] = useState("metric");
 
   // Get currency symbol for display
   const currencySymbols: Record<string, string> = {
@@ -211,35 +211,20 @@ export const PropertyManager = () => {
         break;
       case "rent-collection":
         toast.info("Opening rent collection dashboard...");
-        // In a real app, this would navigate to rent collection
         break;
       case "maintenance":
         toast.info("Opening maintenance scheduler...");
-        // In a real app, this would navigate to maintenance
         break;
       case "tenant-screening":
         toast.info("Opening tenant screening workflow...");
-        // In a real app, this would navigate to tenant screening
         break;
       default:
         toast.info(`${action} workflow starting...`);
     }
   };
 
-  // New: handle valuation doc upload (per property)
-  const handleValuationDocUpload = (propertyId: number, file: File) => {
-    const url = URL.createObjectURL(file); // In real system, upload and store
-    setPriceValuation(prev => ({
-      ...prev,
-      [propertyId]: {
-        ...prev[propertyId],
-        valuationDoc: { url, name: file.name }
-      }
-    }));
-  };
-
   return (
-    <div className="space-y-8 p-6">
+    <div className="space-y-6 p-6">
       {/* Enhanced Page Header */}
       <div className="flex items-center justify-between bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-100">
         <div className="flex items-center space-x-4">
@@ -248,7 +233,7 @@ export const PropertyManager = () => {
           </div>
           <div>
             <h1 className="text-4xl font-bold text-gray-900 mb-1">Property Management</h1>
-            <p className="text-lg text-gray-600">Manage your portfolio and search any property in South Africa</p>
+            <p className="text-lg text-gray-600">Manage your portfolio and search properties in South Africa</p>
             <div className="flex gap-2 mt-3">
               <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                 {properties.length} Total Properties
@@ -292,24 +277,34 @@ export const PropertyManager = () => {
         </div>
       </div>
 
-      {/* Main Tabs */}
+      {/* Main Tabs - Fixed Structure */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 bg-white border border-slate-200/60 rounded-xl p-1 shadow-lg">
-          <TabsTrigger value="portfolio" className="text-lg py-3">My Portfolio</TabsTrigger>
-          <TabsTrigger value="search" className="text-lg py-3">Property Search</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 bg-white border border-slate-200/60 rounded-xl p-1 shadow-lg h-14">
+          <TabsTrigger 
+            value="portfolio" 
+            className="text-lg py-3 data-[state=active]:bg-blue-500 data-[state=active]:text-white"
+          >
+            My Portfolio
+          </TabsTrigger>
+          <TabsTrigger 
+            value="search" 
+            className="text-lg py-3 data-[state=active]:bg-blue-500 data-[state=active]:text-white"
+          >
+            Property Search
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="portfolio" className="space-y-6">
-          {/* New Workflow Component */}
+        <TabsContent value="portfolio" className="space-y-6 mt-6">
+          {/* Property Workflow */}
           <PropertyWorkflow 
             properties={properties} 
             onQuickAction={handleQuickAction}
           />
 
-          {/* Enhanced Property Stats (now uses currency symbol) */}
+          {/* Property Stats */}
           <PropertyStats properties={properties} currencySymbol={currencySymbol} />
 
-          {/* Enhanced Search and Filters */}
+          {/* Search and Filters */}
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
             <div className="flex flex-col lg:flex-row gap-6 items-center justify-between">
               <div className="flex-1 flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4 w-full">
@@ -355,7 +350,7 @@ export const PropertyManager = () => {
             </div>
           </div>
 
-          {/* Enhanced Property Grid/List */}
+          {/* Property Grid */}
           <PropertyGrid
             properties={filteredProperties}
             viewMode={viewMode}
@@ -368,12 +363,12 @@ export const PropertyManager = () => {
           />
         </TabsContent>
 
-        <TabsContent value="search">
+        <TabsContent value="search" className="space-y-6 mt-6">
           <PropertySearchTab />
         </TabsContent>
       </Tabs>
 
-      {/* Enhanced Property Form Dialog */}
+      {/* Property Form Dialog */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent className="max-w-7xl max-h-[95vh] overflow-y-auto">
           <DialogHeader>
