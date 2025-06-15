@@ -1,5 +1,6 @@
 
-import { useState, useEffect, useRef } from "react";
+
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
@@ -24,15 +25,8 @@ export const DocumentBatchSelector = ({
   onSelectionChange, 
   onBulkAction 
 }: DocumentBatchSelectorProps) => {
-  const checkboxRef = useRef<HTMLButtonElement>(null);
   const allSelected = documents.length > 0 && selectedIds.length === documents.length;
   const someSelected = selectedIds.length > 0 && selectedIds.length < documents.length;
-
-  useEffect(() => {
-    if (checkboxRef.current) {
-      checkboxRef.current.indeterminate = someSelected;
-    }
-  }, [someSelected]);
 
   const handleSelectAll = () => {
     if (allSelected) {
@@ -53,9 +47,9 @@ export const DocumentBatchSelector = ({
     <div className="flex items-center justify-between bg-gray-50 rounded-lg p-3 mb-4">
       <div className="flex items-center space-x-3">
         <Checkbox
-          ref={checkboxRef}
           checked={allSelected}
           onCheckedChange={handleSelectAll}
+          className={someSelected && !allSelected ? "opacity-60" : ""}
         />
         <span className="text-sm font-medium">
           {selectedIds.length > 0 
@@ -115,3 +109,4 @@ export const DocumentBatchSelector = ({
     </div>
   );
 };
+
