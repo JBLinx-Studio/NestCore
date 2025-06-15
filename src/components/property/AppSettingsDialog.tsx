@@ -50,6 +50,13 @@ export function AppSettingsDialog({
     onClose();
   };
 
+  console.log("AppSettingsDialog currencies:", currencies);
+  console.log("AppSettingsDialog metrics:", metrics);
+  const filteredCurrencies = currencies.filter(c => c.id && c.id.trim() !== "");
+  const filteredMetrics = metrics.filter(m => m.id && m.id.trim() !== "");
+  console.log("AppSettingsDialog filteredCurrencies:", filteredCurrencies);
+  console.log("AppSettingsDialog filteredMetrics:", filteredMetrics);
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
@@ -67,7 +74,7 @@ export function AppSettingsDialog({
                 <SelectValue placeholder="Choose currency..." />
               </SelectTrigger>
               <SelectContent>
-                {currencies.filter(c => c.id && c.id.trim() !== "").map(c => (
+                {filteredCurrencies.map(c => (
                   <SelectItem key={c.id} value={c.id}>{c.label}</SelectItem>
                 ))}
               </SelectContent>
@@ -80,7 +87,7 @@ export function AppSettingsDialog({
                 <SelectValue placeholder="Choose measurement system..." />
               </SelectTrigger>
               <SelectContent>
-                {metrics.filter(m => m.id && m.id.trim() !== "").map(m => (
+                {filteredMetrics.map(m => (
                   <SelectItem key={m.id} value={m.id}>{m.label}</SelectItem>
                 ))}
               </SelectContent>
