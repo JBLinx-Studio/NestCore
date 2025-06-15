@@ -47,9 +47,9 @@ export const DocumentFilters = ({
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [dateFrom, setDateFrom] = useState<Date>();
   const [dateTo, setDateTo] = useState<Date>();
-  const [selectedStatus, setSelectedStatus] = useState<string>("");
-  const [selectedProperty, setSelectedProperty] = useState<string>("");
-  const [selectedTenant, setSelectedTenant] = useState<string>("");
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
+  const [selectedProperty, setSelectedProperty] = useState<string>("all");
+  const [selectedTenant, setSelectedTenant] = useState<string>("all");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<string>("uploadDate");
   const [sortOrder, setSortOrder] = useState<string>("desc");
@@ -64,9 +64,9 @@ export const DocumentFilters = ({
     const filters = {
       dateFrom,
       dateTo,
-      status: selectedStatus,
-      property: selectedProperty,
-      tenant: selectedTenant,
+      status: selectedStatus === "all" ? "" : selectedStatus,
+      property: selectedProperty === "all" ? "" : selectedProperty,
+      tenant: selectedTenant === "all" ? "" : selectedTenant,
       tags: selectedTags,
       sortBy,
       sortOrder
@@ -77,9 +77,9 @@ export const DocumentFilters = ({
   const clearFilters = () => {
     setDateFrom(undefined);
     setDateTo(undefined);
-    setSelectedStatus("");
-    setSelectedProperty("");
-    setSelectedTenant("");
+    setSelectedStatus("all");
+    setSelectedProperty("all");
+    setSelectedTenant("all");
     setSelectedTags([]);
     setSortBy("uploadDate");
     setSortOrder("desc");
@@ -107,9 +107,9 @@ export const DocumentFilters = ({
   const activeFiltersCount = [
     dateFrom,
     dateTo,
-    selectedStatus,
-    selectedProperty,
-    selectedTenant,
+    selectedStatus !== "all",
+    selectedProperty !== "all",
+    selectedTenant !== "all",
     selectedTags.length > 0
   ].filter(Boolean).length;
 
@@ -239,7 +239,7 @@ export const DocumentFilters = ({
                     <SelectValue placeholder="All statuses" />
                   </SelectTrigger>
                   <SelectContent className="bg-white">
-                    <SelectItem value="">All statuses</SelectItem>
+                    <SelectItem value="all">All statuses</SelectItem>
                     {uniqueStatuses.map(status => (
                       <SelectItem key={status} value={status}>
                         {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -257,7 +257,7 @@ export const DocumentFilters = ({
                     <SelectValue placeholder="All properties" />
                   </SelectTrigger>
                   <SelectContent className="bg-white">
-                    <SelectItem value="">All properties</SelectItem>
+                    <SelectItem value="all">All properties</SelectItem>
                     {uniqueProperties.map(property => (
                       <SelectItem key={property} value={property}>
                         {property}
@@ -275,7 +275,7 @@ export const DocumentFilters = ({
                     <SelectValue placeholder="All tenants" />
                   </SelectTrigger>
                   <SelectContent className="bg-white">
-                    <SelectItem value="">All tenants</SelectItem>
+                    <SelectItem value="all">All tenants</SelectItem>
                     {uniqueTenants.map(tenant => (
                       <SelectItem key={tenant} value={tenant}>
                         {tenant}
@@ -349,22 +349,22 @@ export const DocumentFilters = ({
               <X className="h-3 w-3 cursor-pointer" onClick={() => setDateTo(undefined)} />
             </Badge>
           )}
-          {selectedStatus && (
+          {selectedStatus !== "all" && (
             <Badge variant="secondary" className="flex items-center gap-1">
               Status: {selectedStatus}
-              <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedStatus("")} />
+              <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedStatus("all")} />
             </Badge>
           )}
-          {selectedProperty && (
+          {selectedProperty !== "all" && (
             <Badge variant="secondary" className="flex items-center gap-1">
               Property: {selectedProperty}
-              <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedProperty("")} />
+              <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedProperty("all")} />
             </Badge>
           )}
-          {selectedTenant && (
+          {selectedTenant !== "all" && (
             <Badge variant="secondary" className="flex items-center gap-1">
               Tenant: {selectedTenant}
-              <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedTenant("")} />
+              <X className="h-3 w-3 cursor-pointer" onClick={() => setSelectedTenant("all")} />
             </Badge>
           )}
           <Button variant="ghost" size="sm" onClick={clearFilters}>
