@@ -1,9 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/sonner';
 import Index from './pages/Index';
-import Diagnostics from './pages/Diagnostics';
 import NotFound from './pages/NotFound';
 import GuestAuth from './components/auth/GuestAuth';
 import { guestAuthService, GuestUser } from './services/GuestAuthService';
@@ -78,7 +78,6 @@ function App() {
                 <Index currentUser={currentUser} onSignOut={handleSignOut} /> :
                 <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50" />
               } />
-              <Route path="/diagnostics" element={<Diagnostics />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </div>
