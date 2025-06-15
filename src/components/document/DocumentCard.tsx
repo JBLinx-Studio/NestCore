@@ -4,6 +4,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Building, User, Calendar } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, Download, Share, Trash2, Edit } from "lucide-react";
 import { getFileIcon, getStatusColor } from "./categories";
 import { ConfirmationDialog } from "./ConfirmationDialog";
@@ -11,6 +12,8 @@ import { RenameDialog } from "./RenameDialog";
 
 export const DocumentCard = ({
   doc,
+  isSelected,
+  onSelectionChange,
   onView,
   onDownload,
   onShare,
@@ -18,6 +21,8 @@ export const DocumentCard = ({
   onRename,
 }: {
   doc: any;
+  isSelected?: boolean;
+  onSelectionChange?: (selected: boolean) => void;
   onView: (doc: any) => void;
   onDownload: (doc: any) => void;
   onShare: (doc: any) => void;
@@ -40,10 +45,22 @@ export const DocumentCard = ({
 
   return (
     <>
-      <Card key={doc.id} className="hover:shadow-md transition-shadow duration-200 group">
+      <Card 
+        key={doc.id} 
+        className={`hover:shadow-md transition-all duration-200 group ${
+          isSelected ? 'ring-2 ring-blue-500 bg-blue-50' : ''
+        }`}
+      >
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex items-start space-x-3 flex-1">
+              {onSelectionChange && (
+                <Checkbox
+                  checked={isSelected}
+                  onCheckedChange={onSelectionChange}
+                  className="mt-1"
+                />
+              )}
               {getFileIcon(doc.fileType)}
               <div className="flex-1 min-w-0">
                 <CardTitle className="text-base truncate">{doc.name}</CardTitle>

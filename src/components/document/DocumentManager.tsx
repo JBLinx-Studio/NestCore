@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,13 +32,25 @@ import { DocumentWorkflow } from "./DocumentWorkflow";
 import { CategoriesSidebar } from "./CategoriesSidebar";
 import { DocumentCard } from "./DocumentCard";
 import { DropZone } from "./DropZone";
+import { DocumentBatchSelector } from "./DocumentBatchSelector";
+import { FileUploadProgress } from "./FileUploadProgress";
 import { getFileIcon, getStatusColor } from "./categories";
+import { validateFiles, getFileCategory, formatFileSize } from "./fileValidation";
+
+interface UploadFile {
+  file: File;
+  progress: number;
+  status: 'uploading' | 'completed' | 'error';
+  error?: string;
+}
 
 export const DocumentManager = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedDocumentIds, setSelectedDocumentIds] = useState<number[]>([]);
   const [viewingDocument, setViewingDocument] = useState<any>(null);
   const [showDocumentView, setShowDocumentView] = useState(false);
+  const [uploadingFiles, setUploadingFiles] = useState<UploadFile[]>([]);
   const [documents, setDocuments] = useState([
     {
       id: 1,
@@ -121,27 +132,130 @@ export const DocumentManager = () => {
     }
   ]);
 
-  const handleUpload = (file: File) => {
-    const newDocument = {
-      id: Date.now(),
-      name: file.name,
-      type: "document",
-      category: "Legal",
-      size: `${(file.size / 1024 / 1024).toFixed(1)} MB`,
-      uploadDate: new Date().toISOString().split('T')[0],
-      property: "All Properties",
-      tenant: "N/A",
-      status: "uploaded",
-      fileType: file.type.includes('image') ? 'image' : 'pdf',
-      url: URL.createObjectURL(file)
-    };
-    setDocuments([newDocument, ...documents]);
-    toast.success(`Successfully uploaded: ${file.name}`);
+  const simulateFileUpload = (file: File): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      const uploadTime = Math.random() * 3000 + 1000; // 1-4 seconds
+      const shouldFail = Math.random() < 0.1; // 10% chance to fail
+      
+      const interval = setInterval(() => {
+        setUploadingFiles(current => 
+          current.map(uf => 
+            uf.file === file 
+              ? { ...uf, progress: Math.min(uf.progress + Math.random() * 20, 95) }
+              : uf
+          )
+        );
+      }, 200);
+
+      setTimeout(() => {
+        clearInterval(interval);
+        
+        if (shouldFail) {
+          setUploadingFiles(current => 
+            current.map(uf => 
+              uf.file === file 
+                ? { ...uf, status: 'error' as const, error: 'Upload failed. Please try again.' }
+                : uf
+            )
+          );
+          reject(new Error('Upload failed'));
+        } else {
+          setUploadingFiles(current => 
+            current.map(uf => 
+              uf.file === file 
+                ? { ...uf, progress: 100, status: 'completed' as const }
+                : uf
+            )
+          );
+          resolve();
+        }
+      }, uploadTime);
+    });
+  };
+
+  const handleUpload = async (file: File) => {
+    const validation = validateFiles([file]);
+    
+    if (!validation.isValid) {
+      validation.errors.forEach(error => toast.error(error));
+      return;
+    }
+
+    if (validation.warnings.length > 0) {
+      validation.warnings.forEach(warning => toast.warning(warning));
+    }
+
+    // Add to uploading files
+    setUploadingFiles(current => [...current, {
+      file,
+      progress: 0,
+      status: 'uploading'
+    }]);
+
+    try {
+      await simulateFileUpload(file);
+      
+      const newDocument = {
+        id: Date.now(),
+        name: file.name,
+        type: "document",
+        category: getFileCategory(file),
+        size: formatFileSize(file.size),
+        uploadDate: new Date().toISOString().split('T')[0],
+        property: "All Properties",
+        tenant: "N/A",
+        status: "uploaded",
+        fileType: file.type.includes('image') ? 'image' : 'pdf',
+        url: URL.createObjectURL(file)
+      };
+      
+      setDocuments(current => [newDocument, ...current]);
+      toast.success(`Successfully uploaded: ${file.name}`);
+      
+      // Remove from uploading files after a delay
+      setTimeout(() => {
+        setUploadingFiles(current => current.filter(uf => uf.file !== file));
+      }, 2000);
+      
+    } catch (error) {
+      toast.error(`Failed to upload: ${file.name}`);
+    }
   };
 
   const handleFilesDropped = (files: File[]) => {
+    const validation = validateFiles(files);
+    
+    if (!validation.isValid) {
+      validation.errors.forEach(error => toast.error(error));
+      return;
+    }
+
+    if (validation.warnings.length > 0) {
+      validation.warnings.forEach(warning => toast.warning(warning));
+    }
+
     files.forEach(file => handleUpload(file));
-    toast.success(`Uploaded ${files.length} file${files.length > 1 ? 's' : ''} successfully!`);
+    toast.success(`Started uploading ${files.length} file${files.length > 1 ? 's' : ''}!`);
+  };
+
+  const handleRemoveUploadingFile = (index: number) => {
+    setUploadingFiles(current => current.filter((_, i) => i !== index));
+  };
+
+  const handleRetryUpload = (index: number) => {
+    const uploadFile = uploadingFiles[index];
+    if (uploadFile) {
+      setUploadingFiles(current => 
+        current.map((uf, i) => 
+          i === index 
+            ? { ...uf, status: 'uploading' as const, progress: 0, error: undefined }
+            : uf
+        )
+      );
+      simulateFileUpload(uploadFile.file).catch(() => {
+        // Error handling is already in simulateFileUpload
+      });
+    }
   };
 
   const handleBulkUpload = (files: FileList) => {
@@ -154,6 +268,7 @@ export const DocumentManager = () => {
     switch (action) {
       case 'delete':
         setDocuments(documents.filter(doc => !documentIds.includes(doc.id)));
+        toast.success(`Deleted ${documentIds.length} document${documentIds.length > 1 ? 's' : ''}`);
         break;
       case 'archive':
         setDocuments(documents.map(doc => 
@@ -161,6 +276,7 @@ export const DocumentManager = () => {
             ? { ...doc, status: 'archived' } 
             : doc
         ));
+        toast.success(`Archived ${documentIds.length} document${documentIds.length > 1 ? 's' : ''}`);
         break;
       case 'download':
         affectedDocs.forEach(doc => {
@@ -171,10 +287,15 @@ export const DocumentManager = () => {
           link.click();
           document.body.removeChild(link);
         });
+        toast.success(`Downloading ${documentIds.length} document${documentIds.length > 1 ? 's' : ''}...`);
         break;
       case 'share':
         const shareText = affectedDocs.map(doc => `${doc.name} - ${doc.property}`).join('\n');
         navigator.clipboard.writeText(shareText);
+        toast.success(`Copied ${documentIds.length} document details to clipboard!`);
+        break;
+      case 'tag':
+        toast.info('Tagging feature coming soon!');
         break;
     }
   };
@@ -205,7 +326,6 @@ export const DocumentManager = () => {
 
   const handleDownloadDocument = (document: any) => {
     toast.success(`Downloading ${document.name}...`);
-    // Create a temporary download link
     const link = document.createElement('a');
     link.href = document.url || '#';
     link.download = document.name;
@@ -261,7 +381,14 @@ export const DocumentManager = () => {
         <DocumentActions onUpload={handleUpload} onCreateFolder={handleCreateFolder} />
       </div>
 
-      {/* New Workflow Component */}
+      {/* Upload Progress */}
+      <FileUploadProgress 
+        files={uploadingFiles}
+        onRemoveFile={handleRemoveUploadingFile}
+        onRetryFile={handleRetryUpload}
+      />
+
+      {/* Document Workflow Component */}
       <DocumentWorkflow 
         documents={documents}
         onUpload={handleBulkUpload}
@@ -292,11 +419,27 @@ export const DocumentManager = () => {
             />
           </div>
 
+          {/* Batch Selection */}
+          <DocumentBatchSelector
+            documents={filteredDocuments}
+            selectedIds={selectedDocumentIds}
+            onSelectionChange={setSelectedDocumentIds}
+            onBulkAction={handleBulkAction}
+          />
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filteredDocuments.map((doc) => (
               <DocumentCard
                 key={doc.id}
                 doc={doc}
+                isSelected={selectedDocumentIds.includes(doc.id)}
+                onSelectionChange={(selected) => {
+                  if (selected) {
+                    setSelectedDocumentIds([...selectedDocumentIds, doc.id]);
+                  } else {
+                    setSelectedDocumentIds(selectedDocumentIds.filter(id => id !== doc.id));
+                  }
+                }}
                 onView={handleViewDocument}
                 onDownload={handleDownloadDocument}
                 onShare={handleShareDocument}
