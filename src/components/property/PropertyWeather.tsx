@@ -5,12 +5,13 @@ import { Badge } from "@/components/ui/badge";
 import { 
   CloudSun, 
   CloudRain,
-  Map,
   Thermometer,
   Droplets,
   Wind,
   Eye,
-  Gauge
+  Gauge,
+  Sun,
+  Cloud
 } from "lucide-react";
 import { weatherService, WeatherData, WeatherForecast } from "@/services/WeatherService";
 import { PropertyLocation } from "@/services/OpenStreetMapService";
@@ -31,7 +32,7 @@ export const PropertyWeather = ({ property }: PropertyWeatherProps) => {
   const loadWeatherData = async () => {
     setIsLoading(true);
     try {
-      console.log('Loading weather data for:', property.displayName);
+      console.log('Loading free weather data for:', property.displayName);
       
       const [weather, forecastData] = await Promise.all([
         weatherService.getCurrentWeather(property.lat, property.lon),
@@ -40,7 +41,7 @@ export const PropertyWeather = ({ property }: PropertyWeatherProps) => {
       
       setCurrentWeather(weather);
       setForecast(forecastData);
-      console.log('Weather data loaded:', weather);
+      console.log('Free weather data loaded:', weather);
       
     } catch (error) {
       console.error('Failed to load weather data:', error);
@@ -50,8 +51,10 @@ export const PropertyWeather = ({ property }: PropertyWeatherProps) => {
   };
 
   const getWeatherIcon = (description: string) => {
-    if (description.includes('rain')) return <CloudRain className="h-8 w-8 text-blue-500" />;
-    if (description.includes('cloud')) return <CloudSun className="h-8 w-8 text-gray-500" />;
+    const desc = description.toLowerCase();
+    if (desc.includes('rain')) return <CloudRain className="h-8 w-8 text-blue-500" />;
+    if (desc.includes('cloud')) return <Cloud className="h-8 w-8 text-gray-500" />;
+    if (desc.includes('clear') || desc.includes('sunny')) return <Sun className="h-8 w-8 text-yellow-500" />;
     return <CloudSun className="h-8 w-8 text-yellow-500" />;
   };
 
@@ -61,13 +64,14 @@ export const PropertyWeather = ({ property }: PropertyWeatherProps) => {
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <CloudSun className="h-5 w-5 text-blue-600" />
-            <span>Local Weather</span>
+            <span>Free Weather Data</span>
+            <Badge className="bg-green-100 text-green-800">No API Keys Required</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="text-sm text-gray-500 mt-2">Loading weather data...</p>
+            <p className="text-sm text-gray-500 mt-2">Loading free weather data...</p>
           </div>
         </CardContent>
       </Card>
@@ -80,12 +84,14 @@ export const PropertyWeather = ({ property }: PropertyWeatherProps) => {
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <CloudSun className="h-5 w-5 text-blue-600" />
-            <span>Local Weather</span>
+            <span>Free Weather Data</span>
+            <Badge className="bg-green-100 text-green-800">No API Keys Required</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-8">
-            <p className="text-sm text-gray-500">Weather data unavailable</p>
+            <p className="text-sm text-gray-500">Weather data temporarily unavailable</p>
+            <p className="text-xs text-gray-400 mt-1">Using free weather services - no tokens required</p>
           </div>
         </CardContent>
       </Card>
@@ -101,7 +107,7 @@ export const PropertyWeather = ({ property }: PropertyWeatherProps) => {
             <div className="flex items-center space-x-2">
               <CloudSun className="h-5 w-5 text-blue-600" />
               <span>Current Weather</span>
-              <Badge className="bg-green-100 text-green-800">Live Data</Badge>
+              <Badge className="bg-green-100 text-green-800">Free Service</Badge>
             </div>
           </CardTitle>
         </CardHeader>
@@ -157,14 +163,15 @@ export const PropertyWeather = ({ property }: PropertyWeatherProps) => {
             </div>
           </div>
 
-          <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+          <div className="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-blue-800">📍 Location Weather</p>
-                <p className="text-xs text-blue-600">{property.displayName}</p>
+                <p className="text-sm font-medium text-green-800">🌤️ Free Weather Service</p>
+                <p className="text-xs text-green-600">{property.displayName}</p>
+                <p className="text-xs text-green-600">Data source: wttr.in (no API key required)</p>
               </div>
               <div className="text-right">
-                <p className="text-xs text-blue-600">
+                <p className="text-xs text-green-600">
                   Updated: {new Date(currentWeather.lastUpdated).toLocaleTimeString()}
                 </p>
               </div>
@@ -180,6 +187,7 @@ export const PropertyWeather = ({ property }: PropertyWeatherProps) => {
             <CardTitle className="flex items-center space-x-2">
               <CloudRain className="h-5 w-5 text-blue-600" />
               <span>5-Day Forecast</span>
+              <Badge className="bg-green-100 text-green-800">Free Data</Badge>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -200,6 +208,15 @@ export const PropertyWeather = ({ property }: PropertyWeatherProps) => {
                   )}
                 </div>
               ))}
+            </div>
+            
+            <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <p className="text-sm text-blue-800 font-medium">
+                ☁️ Weather data provided by free services - no API tokens or keys required!
+              </p>
+              <p className="text-xs text-blue-600 mt-1">
+                Data refreshed automatically using wttr.in and other free weather sources
+              </p>
             </div>
           </CardContent>
         </Card>

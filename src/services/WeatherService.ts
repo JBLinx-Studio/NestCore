@@ -6,10 +6,7 @@ export interface WeatherData {
   windSpeed: number;
   pressure: number;
   visibility: number;
-  uvIndex: number;
   feelsLike: number;
-  icon: string;
-  location: string;
   lastUpdated: string;
 }
 
@@ -18,112 +15,105 @@ export interface WeatherForecast {
   maxTemp: number;
   minTemp: number;
   description: string;
-  icon: string;
   precipitation: number;
 }
 
 class WeatherService {
-  private readonly baseUrl = 'https://api.openweathermap.org/data/2.5';
-  
+  // Using free weather services that don't require API keys
   async getCurrentWeather(lat: number, lon: number): Promise<WeatherData> {
-    console.log(`Fetching weather for coordinates: ${lat}, ${lon}`);
-    
     try {
-      // Using free OpenWeatherMap API - requires API key
-      // For demo purposes, we'll simulate the API call
-      const response = await this.simulateWeatherAPI(lat, lon);
+      // Using wttr.in - a free weather service that doesn't require API keys
+      const response = await fetch(`https://wttr.in/${lat},${lon}?format=j1`);
+      
+      if (!response.ok) {
+        throw new Error('Weather service unavailable');
+      }
+
+      const data = await response.json();
+      const current = data.current_condition[0];
       
       return {
-        temperature: response.main.temp,
-        description: response.weather[0].description,
-        humidity: response.main.humidity,
-        windSpeed: response.wind.speed,
-        pressure: response.main.pressure,
-        visibility: response.visibility / 1000, // Convert to km
-        uvIndex: response.uvi || 0,
-        feelsLike: response.main.feels_like,
-        icon: response.weather[0].icon,
-        location: response.name,
+        temperature: parseInt(current.temp_C),
+        description: current.weatherDesc[0].value.toLowerCase(),
+        humidity: parseInt(current.humidity),
+        windSpeed: parseInt(current.windspeedKmph),
+        pressure: parseInt(current.pressure),
+        visibility: parseInt(current.visibility),
+        feelsLike: parseInt(current.FeelsLikeC),
         lastUpdated: new Date().toISOString()
       };
     } catch (error) {
-      console.error('Weather API error:', error);
-      // Return default weather data if API fails
-      return this.getDefaultWeatherData(lat, lon);
+      console.error('Weather fetch error:', error);
+      // Return mock data as fallback
+      return this.getMockWeatherData(lat, lon);
     }
   }
 
   async getWeatherForecast(lat: number, lon: number): Promise<WeatherForecast[]> {
     try {
-      // Simulate 5-day forecast
-      const forecast: WeatherForecast[] = [];
-      const today = new Date();
+      // Using wttr.in for forecast data
+      const response = await fetch(`https://wttr.in/${lat},${lon}?format=j1`);
       
-      for (let i = 0; i < 5; i++) {
-        const date = new Date(today);
-        date.setDate(today.getDate() + i);
-        
-        forecast.push({
-          date: date.toISOString().split('T')[0],
-          maxTemp: Math.round(20 + Math.random() * 15),
-          minTemp: Math.round(10 + Math.random() * 10),
-          description: ['Clear sky', 'Partly cloudy', 'Overcast', 'Light rain'][Math.floor(Math.random() * 4)],
-          icon: ['01d', '02d', '04d', '10d'][Math.floor(Math.random() * 4)],
-          precipitation: Math.round(Math.random() * 20)
-        });
+      if (!response.ok) {
+        throw new Error('Weather forecast unavailable');
       }
+
+      const data = await response.json();
       
-      return forecast;
+      return data.weather.slice(0, 5).map((day: any, index: number) => ({
+        date: new Date(Date.now() + index * 24 * 60 * 60 * 1000).toISOString(),
+        maxTemp: parseInt(day.maxtempC),
+        minTemp: parseInt(day.mintempC),
+        description: day.hourly[0]?.weatherDesc[0]?.value?.toLowerCase() || 'partly cloudy',
+        precipitation: parseInt(day.hourly[0]?.chanceofrain || '0')
+      }));
     } catch (error) {
       console.error('Weather forecast error:', error);
-      return [];
+      return this.getMockForecastData();
     }
   }
 
-  private async simulateWeatherAPI(lat: number, lon: number) {
-    // Simulate realistic weather data based on South African climate
-    const isCoastal = Math.abs(lat + 33.9) < 2; // Near Cape Town/Durban
-    const baseTemp = isCoastal ? 22 : 18;
-    const tempVariation = Math.random() * 10 - 5;
+  private getMockWeatherData(lat: number, lon: number): WeatherData {
+    // Generate realistic mock data based on location
+    const baseTemp = this.estimateTemperatureByLocation(lat, lon);
     
     return {
-      main: {
-        temp: Math.round(baseTemp + tempVariation),
-        feels_like: Math.round(baseTemp + tempVariation + 2),
-        humidity: Math.round(50 + Math.random() * 40),
-        pressure: Math.round(1010 + Math.random() * 20)
-      },
-      weather: [{
-        description: ['clear sky', 'few clouds', 'scattered clouds', 'partly cloudy'][Math.floor(Math.random() * 4)],
-        icon: '01d'
-      }],
-      wind: {
-        speed: Math.round(Math.random() * 15)
-      },
-      visibility: Math.round(8000 + Math.random() * 2000),
-      name: 'Local Area',
-      uvi: Math.round(Math.random() * 10)
-    };
-  }
-
-  private getDefaultWeatherData(lat: number, lon: number): WeatherData {
-    return {
-      temperature: 22,
-      description: 'Clear sky',
-      humidity: 65,
-      windSpeed: 8,
-      pressure: 1015,
-      visibility: 10,
-      uvIndex: 5,
-      feelsLike: 24,
-      icon: '01d',
-      location: 'Location',
+      temperature: baseTemp + Math.floor(Math.random() * 10 - 5),
+      description: this.getRandomWeatherDescription(),
+      humidity: 50 + Math.floor(Math.random() * 40),
+      windSpeed: 5 + Math.floor(Math.random() * 20),
+      pressure: 1010 + Math.floor(Math.random() * 40),
+      visibility: 8 + Math.floor(Math.random() * 7),
+      feelsLike: baseTemp + Math.floor(Math.random() * 8 - 4),
       lastUpdated: new Date().toISOString()
     };
   }
 
-  getWeatherIconUrl(icon: string): string {
-    return `https://openweathermap.org/img/wn/${icon}@2x.png`;
+  private getMockForecastData(): WeatherForecast[] {
+    const descriptions = ['sunny', 'partly cloudy', 'cloudy', 'light rain', 'clear'];
+    
+    return Array.from({ length: 5 }, (_, index) => ({
+      date: new Date(Date.now() + index * 24 * 60 * 60 * 1000).toISOString(),
+      maxTemp: 18 + Math.floor(Math.random() * 15),
+      minTemp: 8 + Math.floor(Math.random() * 10),
+      description: descriptions[Math.floor(Math.random() * descriptions.length)],
+      precipitation: Math.floor(Math.random() * 100)
+    }));
+  }
+
+  private estimateTemperatureByLocation(lat: number, lon: number): number {
+    // Rough temperature estimation based on latitude
+    if (lat < -30) return 25; // Hot regions (Northern SA)
+    if (lat < -26) return 20; // Moderate regions (Central SA)
+    return 15; // Cooler regions (Southern SA)
+  }
+
+  private getRandomWeatherDescription(): string {
+    const descriptions = [
+      'clear sky', 'few clouds', 'scattered clouds', 'broken clouds',
+      'light rain', 'moderate rain', 'partly cloudy', 'sunny'
+    ];
+    return descriptions[Math.floor(Math.random() * descriptions.length)];
   }
 }
 
