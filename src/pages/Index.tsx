@@ -29,10 +29,6 @@ const Index: React.FC<IndexProps> = ({ currentUser, onSignOut }) => {
   const [activeSection, setActiveSection] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  const handleToggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
-
   const renderActiveSection = () => {
     switch (activeSection) {
       case "dashboard":
@@ -74,22 +70,19 @@ const Index: React.FC<IndexProps> = ({ currentUser, onSignOut }) => {
   };
 
   return (
-    <div className="flex h-screen w-full bg-gray-50 overflow-hidden">
+    <div className="flex h-screen bg-gray-50">
       <Sidebar 
         open={sidebarOpen}
         activeTab={activeSection} 
         setActiveTab={setActiveSection} 
       />
-      <div className="flex-1 flex flex-col min-w-0 h-full">
+      <div className="flex-1 flex flex-col overflow-hidden">
         <Header 
           currentUser={currentUser} 
           onSignOut={onSignOut} 
-          onToggleSidebar={handleToggleSidebar}
         />
-        <main className="flex-1 overflow-auto w-full h-full">
-          <div className="w-full h-full">
-            {renderActiveSection()}
-          </div>
+        <main className="flex-1 overflow-auto">
+          {renderActiveSection()}
         </main>
       </div>
     </div>

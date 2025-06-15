@@ -10,17 +10,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Bell, Search, Settings, LogOut, User, Menu } from "lucide-react";
+import { Bell, Search, Settings, LogOut, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { GuestUser } from '@/services/GuestAuthService';
 
 interface HeaderProps {
   currentUser: GuestUser;
   onSignOut: () => void;
-  onToggleSidebar: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ currentUser, onSignOut, onToggleSidebar }) => {
+export const Header: React.FC<HeaderProps> = ({ currentUser, onSignOut }) => {
   const userInitials = currentUser.name
     .split(' ')
     .map(n => n[0])
@@ -29,18 +28,9 @@ export const Header: React.FC<HeaderProps> = ({ currentUser, onSignOut, onToggle
     .slice(0, 2);
 
   return (
-    <header className="bg-white border-b border-gray-200 px-6 py-4 w-full">
-      <div className="flex items-center justify-between w-full">
+    <header className="bg-white border-b border-gray-200 px-6 py-4">
+      <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4 flex-1">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={onToggleSidebar}
-            className="p-2"
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-          
           <div className="relative max-w-md w-full">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
