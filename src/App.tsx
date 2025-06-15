@@ -1,9 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/sonner';
 import Index from './pages/Index';
+import Diagnostics from './pages/Diagnostics';
 import NotFound from './pages/NotFound';
 import GuestAuth from './components/auth/GuestAuth';
 import { guestAuthService, GuestUser } from './services/GuestAuthService';
@@ -23,6 +23,7 @@ const queryClient = new QueryClient({
 function App() {
   const [currentUser, setCurrentUser] = useState<GuestUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showAuth, setShowAuth] = useState(false);
 
   useEffect(() => {
     // Initialize services
@@ -33,6 +34,9 @@ function App() {
     const existingUser = guestAuthService.getCurrentUser();
     if (existingUser) {
       setCurrentUser(existingUser);
+      setShowAuth(false);
+    } else {
+      setShowAuth(true);
     }
     
     setIsLoading(false);
@@ -40,11 +44,13 @@ function App() {
 
   const handleAuthenticated = (user: GuestUser) => {
     setCurrentUser(user);
+    setShowAuth(false);
   };
 
   const handleSignOut = () => {
     guestAuthService.signOut();
     setCurrentUser(null);
+    setShowAuth(true);
   };
 
   if (isLoading) {
@@ -60,25 +66,33 @@ function App() {
     );
   }
 
-  // Show authentication if user is not logged in
-  if (!currentUser) {
-    return (
-      <QueryClientProvider client={queryClient}>
-        <GuestAuth onAuthenticated={handleAuthenticated} />
-        <Toaster />
-      </QueryClientProvider>
-    );
-  }
-
-  // Show main app if user is authenticated
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
-        <div className="min-h-screen bg-background">
-          <Routes>
-            <Route path="/" element={<Index currentUser={currentUser} onSignOut={handleSignOut} />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+        <div className="min-h-screen bg-background relative">
+          {/* Main App - always rendered */}
+          <div className={showAuth ? 'blur-md brightness-50 pointer-events-none transition-all duration-500' : 'transition-all duration-500'}>
+            <Routes>
+              <Route path="/" element={
+                currentUser ? 
+                <Index currentUser={currentUser} onSignOut={handleSignOut} /> :
+                <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50" />
+              } />
+              <Route path="/diagnostics" element={<Diagnostics />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </div>
+          
+          {/* Cinematic Auth Overlay */}
+          {showAuth && (
+            <div className="fixed inset-0 z-50 bg-gradient-to-br from-slate-900/95 via-gray-900/90 to-black/95 backdrop-blur-xl">
+              {/* Additional cinematic overlay effects */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/30"></div>
+              <div className="absolute inset-0 bg-gradient-radial from-transparent via-slate-900/20 to-black/60"></div>
+              
+              <GuestAuth onAuthenticated={handleAuthenticated} isOpen={showAuth} />
+            </div>
+          )}
         </div>
         <Toaster />
       </Router>
