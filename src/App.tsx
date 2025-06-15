@@ -14,6 +14,12 @@ import { DocumentManager } from "@/components/document/DocumentManager";
 import { AIAssistant } from "@/components/ai/AIAssistant";
 import { PeopleManager } from "@/components/people/PeopleManager";
 import { WorkManager } from "@/components/work/WorkManager";
+import { LeasingManager } from "@/components/leasing/LeasingManager";
+import { MaintenanceManager } from "@/components/maintenance/MaintenanceManager";
+import { FinancialManager } from "@/components/financial/FinancialManager";
+import { ComplianceManager } from "@/components/compliance/ComplianceManager";
+import { ReportsManager } from "@/components/reports/ReportsManager";
+import { CommunicationsManager } from "@/components/communications/CommunicationsManager";
 
 const queryClient = new QueryClient();
 
@@ -31,10 +37,22 @@ const App = () => {
         return <TenantManager />;
       case "work":
         return <WorkManager />;
+      case "leasing":
+        return <LeasingManager />;
+      case "maintenance":
+        return <MaintenanceManager />;
+      case "financial":
+        return <FinancialManager />;
       case "utilities":
         return <UtilityTracker />;
+      case "compliance":
+        return <ComplianceManager />;
+      case "reports":
+        return <ReportsManager />;
       case "documents":
         return <DocumentManager />;
+      case "communications":
+        return <CommunicationsManager />;
       case "ai-assistant":
         return <AIAssistant />;
       case "people":
@@ -74,8 +92,14 @@ const App = () => {
                   <Route path="/properties" element={<PropertyManager />} />
                   <Route path="/tenants" element={<TenantManager />} />
                   <Route path="/work" element={<WorkManager />} />
+                  <Route path="/leasing" element={<LeasingManager />} />
+                  <Route path="/maintenance" element={<MaintenanceManager />} />
+                  <Route path="/financial" element={<FinancialManager />} />
                   <Route path="/utilities" element={<UtilityTracker />} />
+                  <Route path="/compliance" element={<ComplianceManager />} />
+                  <Route path="/reports" element={<ReportsManager />} />
                   <Route path="/documents" element={<DocumentManager />} />
+                  <Route path="/communications" element={<CommunicationsManager />} />
                   <Route path="/ai-assistant" element={<AIAssistant />} />
                   <Route path="/people" element={<PeopleManager />} />
                   <Route path="*" element={renderActiveComponent()} />
