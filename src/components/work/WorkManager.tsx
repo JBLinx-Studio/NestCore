@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,6 +26,7 @@ import { ValuationWorkspace } from "./ValuationWorkspace";
 import { MarketAnalysisWorkspace } from "./MarketAnalysisWorkspace";
 import { PropertyReportWorkspace } from "./PropertyReportWorkspace";
 import { toast } from "sonner";
+import { AdvancedWorkflowManager } from "./AdvancedWorkflowManager";
 
 export const WorkManager = () => {
   const [activeWorkspace, setActiveWorkspace] = useState("overview");
@@ -218,7 +218,7 @@ export const WorkManager = () => {
 
       {/* Enhanced Workspace Tabs */}
       <Tabs value={activeWorkspace} onValueChange={setActiveWorkspace} className="space-y-8">
-        <TabsList className="grid w-full grid-cols-5 bg-white border border-slate-200/60 rounded-xl p-1 shadow-lg shadow-slate-200/50 backdrop-blur-sm">
+        <TabsList className="grid w-full grid-cols-6 bg-white border border-slate-200/60 rounded-xl p-1 shadow-lg shadow-slate-200/50 backdrop-blur-sm">
           <TabsTrigger value="overview" className="rounded-lg data-[state=active]:bg-slate-100 data-[state=active]:text-slate-900 data-[state=active]:shadow-md font-medium transition-all duration-200">
             Overview
           </TabsTrigger>
@@ -233,6 +233,9 @@ export const WorkManager = () => {
           </TabsTrigger>
           <TabsTrigger value="reports" className="rounded-lg data-[state=active]:bg-slate-100 data-[state=active]:text-slate-900 data-[state=active]:shadow-md font-medium transition-all duration-200">
             Reports
+          </TabsTrigger>
+          <TabsTrigger value="advanced" className="rounded-lg data-[state=active]:bg-slate-100 data-[state=active]:text-slate-900 data-[state=active]:shadow-md font-medium transition-all duration-200">
+            Advanced Suite
           </TabsTrigger>
         </TabsList>
 
@@ -365,6 +368,10 @@ export const WorkManager = () => {
 
         <TabsContent value="reports">
           <PropertyReportWorkspace />
+        </TabsContent>
+
+        <TabsContent value="advanced">
+          <AdvancedWorkflowManager />
         </TabsContent>
       </Tabs>
     </div>
