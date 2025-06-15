@@ -74,20 +74,21 @@ const Index: React.FC<IndexProps> = ({ currentUser, onSignOut }) => {
   };
 
   return (
-    <div className="flex h-screen w-full bg-gray-50 overflow-hidden">
+    <div className="flex h-screen w-screen bg-gray-50 overflow-hidden m-0 p-0">
       <Sidebar 
         open={sidebarOpen}
         activeTab={activeSection} 
         setActiveTab={setActiveSection} 
       />
-      <div className="flex-1 flex flex-col min-w-0 h-full">
+      <div className={`flex-1 flex flex-col min-w-0 h-full transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-16'}`}>
         <Header 
           currentUser={currentUser} 
           onSignOut={onSignOut} 
           onToggleSidebar={handleToggleSidebar}
+          sidebarOpen={sidebarOpen}
         />
-        <main className="flex-1 overflow-auto w-full h-full">
-          <div className="w-full h-full">
+        <main className="flex-1 overflow-auto w-full h-full m-0 p-0">
+          <div className="w-full h-full m-0 p-0">
             {renderActiveSection()}
           </div>
         </main>

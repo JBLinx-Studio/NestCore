@@ -18,9 +18,10 @@ interface HeaderProps {
   currentUser: GuestUser;
   onSignOut: () => void;
   onToggleSidebar: () => void;
+  sidebarOpen: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({ currentUser, onSignOut, onToggleSidebar }) => {
+export const Header: React.FC<HeaderProps> = ({ currentUser, onSignOut, onToggleSidebar, sidebarOpen }) => {
   const userInitials = currentUser.name
     .split(' ')
     .map(n => n[0])
@@ -29,14 +30,14 @@ export const Header: React.FC<HeaderProps> = ({ currentUser, onSignOut, onToggle
     .slice(0, 2);
 
   return (
-    <header className="bg-white border-b border-gray-200 px-6 py-4 w-full">
-      <div className="flex items-center justify-between w-full">
+    <header className="bg-white border-b border-gray-200 w-full h-16 flex-shrink-0 m-0 p-0">
+      <div className="flex items-center justify-between w-full h-full px-6">
         <div className="flex items-center space-x-4 flex-1">
           <Button 
             variant="ghost" 
             size="sm" 
             onClick={onToggleSidebar}
-            className="p-2"
+            className="p-2 hover:bg-gray-100"
           >
             <Menu className="h-5 w-5" />
           </Button>
