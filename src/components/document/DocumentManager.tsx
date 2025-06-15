@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,7 @@ import {
 import { DocumentWorkflow } from "./DocumentWorkflow";
 import { CategoriesSidebar } from "./CategoriesSidebar";
 import { DocumentCard } from "./DocumentCard";
+import { DropZone } from "./DropZone";
 import { getFileIcon, getStatusColor } from "./categories";
 
 export const DocumentManager = () => {
@@ -137,6 +139,11 @@ export const DocumentManager = () => {
     toast.success(`Successfully uploaded: ${file.name}`);
   };
 
+  const handleFilesDropped = (files: File[]) => {
+    files.forEach(file => handleUpload(file));
+    toast.success(`Uploaded ${files.length} file${files.length > 1 ? 's' : ''} successfully!`);
+  };
+
   const handleBulkUpload = (files: FileList) => {
     Array.from(files).forEach(file => handleUpload(file));
   };
@@ -212,6 +219,13 @@ export const DocumentManager = () => {
     toast.success("Document deleted successfully");
   };
 
+  const handleRenameDocument = (docId: number, newName: string) => {
+    setDocuments(documents.map(doc => 
+      doc.id === docId ? { ...doc, name: newName } : doc
+    ));
+    toast.success("Document renamed successfully");
+  };
+
   const handleShareDocument = (document: any) => {
     navigator.clipboard.writeText(`Document: ${document.name} - ${document.property}`);
     toast.success("Document details copied to clipboard!");
@@ -237,7 +251,7 @@ export const DocumentManager = () => {
   });
 
   return (
-    <div className="space-y-6">
+    <DropZone onFilesDropped={handleFilesDropped} className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -287,6 +301,7 @@ export const DocumentManager = () => {
                 onDownload={handleDownloadDocument}
                 onShare={handleShareDocument}
                 onDelete={handleDeleteDocument}
+                onRename={handleRenameDocument}
               />
             ))}
           </div>
@@ -390,6 +405,6 @@ export const DocumentManager = () => {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </DropZone>
   );
 };
