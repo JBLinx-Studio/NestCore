@@ -12,7 +12,8 @@ import {
   AlertTriangle,
   CheckCircle,
   XCircle,
-  Info
+  Info,
+  Eye
 } from "lucide-react";
 import { openStreetMapService, PropertyLocation } from "@/services/OpenStreetMapService";
 import { toast } from "sonner";
@@ -21,7 +22,11 @@ interface SearchResult {
   location: PropertyLocation;
 }
 
-export const PropertySearch = () => {
+interface PropertySearchProps {
+  onPropertySelected?: (property: PropertyLocation) => void;
+}
+
+export const PropertySearch = ({ onPropertySelected }: PropertySearchProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -62,6 +67,17 @@ export const PropertySearch = () => {
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleSearch();
+    }
+  };
+
+  const handleSelectResult = (result: SearchResult) => {
+    setSelectedResult(result);
+  };
+
+  const handleViewIntelligence = (result: SearchResult) => {
+    if (onPropertySelected) {
+      onPropertySelected(result.location);
+      toast.success("Property selected for intelligence analysis");
     }
   };
 
@@ -149,7 +165,7 @@ export const PropertySearch = () => {
               className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-2 ${
                 selectedResult === result ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'
               }`}
-              onClick={() => setSelectedResult(result)}
+              onClick={() => handleSelectResult(result)}
             >
               <CardContent className="p-6">
                 <div className="flex items-start justify-between">
@@ -165,19 +181,42 @@ export const PropertySearch = () => {
                     
                     <p className="text-sm text-gray-600 mb-2 line-clamp-2">{result.location.displayName}</p>
                     
-                    <div className="flex items-center space-x-4 text-sm text-gray-500">
+                    <div className="flex items-center space-x-4 text-sm text-gray-500 mb-3">
                       <span>Lat: {result.location.lat.toFixed(6)}</span>
                       <span>Lon: {result.location.lon.toFixed(6)}</span>
                     </div>
+
+                    {result.location.municipality && (
+                      <div className="text-sm text-gray-600">
+                        <span className="font-medium">Municipality:</span> {result.location.municipality}
+                      </div>
+                    )}
+                    
+                    {result.location.province && (
+                      <div className="text-sm text-gray-600">
+                        <span className="font-medium">Province:</span> {result.location.province}
+                      </div>
+                    )}
                   </div>
                   
-                  {selectedResult === result && (
-                    <div className="text-right">
-                      <Badge className="bg-blue-100 text-blue-700">
+                  <div className="text-right space-y-2">
+                    {selectedResult === result && (
+                      <Badge className="bg-blue-100 text-blue-700 block">
                         Selected
                       </Badge>
-                    </div>
-                  )}
+                    )}
+                    <Button
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewIntelligence(result);
+                      }}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      <Eye className="h-3 w-3 mr-1" />
+                      View Intelligence
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -243,6 +282,16 @@ export const PropertySearch = () => {
                       <p className="text-gray-900">{selectedResult.location.postalCode}</p>
                     </div>
                   )}
+
+                  <div className="pt-3 border-t">
+                    <Button
+                      onClick={() => handleViewIntelligence(selectedResult)}
+                      className="w-full bg-green-600 hover:bg-green-700"
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      View Property Intelligence
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
 
@@ -251,20 +300,20 @@ export const PropertySearch = () => {
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center space-x-2 text-lg text-blue-800">
                     <Info className="h-5 w-5" />
-                    <span>Property Data Options</span>
+                    <span>Property Intelligence Available</span>
                   </CardTitle>
                   <CardDescription className="text-blue-700">
-                    Real property ownership and valuation data requires specialized APIs
+                    Click "View Property Intelligence" to see detailed property analysis
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="text-sm text-blue-800">
-                    <p className="font-medium mb-2">For real property details, you can integrate:</p>
+                    <p className="font-medium mb-2">Available with current data:</p>
                     <ul className="list-disc list-inside space-y-1">
-                      <li>Lightstone Property API (property valuations)</li>
-                      <li>Property24 API (listings and market data)</li>
-                      <li>SA Deeds Office (ownership records)</li>
-                      <li>Municipal databases (rates and services)</li>
+                      <li>Location-based value estimation</li>
+                      <li>Property type classification</li>
+                      <li>Municipality and province data</li>
+                      <li>Basic zoning estimation</li>
                     </ul>
                   </div>
                 </CardContent>

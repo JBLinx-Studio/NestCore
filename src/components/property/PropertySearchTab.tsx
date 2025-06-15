@@ -3,9 +3,17 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PropertySearch } from "./PropertySearch";
 import { PropertyIntelligence } from "./PropertyIntelligence";
+import { PropertyLocation } from "@/services/OpenStreetMapService";
 
 export const PropertySearchTab = () => {
   const [activeTab, setActiveTab] = useState("location");
+  const [selectedProperty, setSelectedProperty] = useState<PropertyLocation | null>(null);
+
+  const handlePropertySelected = (property: PropertyLocation) => {
+    setSelectedProperty(property);
+    // Automatically switch to intelligence tab when property is selected
+    setActiveTab("intelligence");
+  };
 
   return (
     <div className="space-y-6">
@@ -26,11 +34,11 @@ export const PropertySearchTab = () => {
         </TabsList>
 
         <TabsContent value="location" className="space-y-6 mt-6">
-          <PropertySearch />
+          <PropertySearch onPropertySelected={handlePropertySelected} />
         </TabsContent>
 
         <TabsContent value="intelligence" className="space-y-6 mt-6">
-          <PropertyIntelligence />
+          <PropertyIntelligence selectedProperty={selectedProperty} />
         </TabsContent>
       </Tabs>
     </div>
