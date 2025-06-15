@@ -19,7 +19,8 @@ import {
   Award,
   Target,
   Zap,
-  Sparkles
+  Sparkles,
+  ArrowRight
 } from "lucide-react";
 import { CMAWorkspace } from "./CMAWorkspace";
 import { ValuationWorkspace } from "./ValuationWorkspace";
@@ -89,223 +90,253 @@ export const WorkManager = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Welcome Header - Similar to Dashboard */}
-      <div className="relative overflow-hidden bg-white border border-gray-200 rounded-xl shadow-sm">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-white to-purple-50/30"></div>
-        <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-blue-100/40 to-transparent rounded-full -translate-y-16 translate-x-16"></div>
-        <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-purple-100/40 to-transparent rounded-full translate-y-12 -translate-x-12"></div>
+    <div className="space-y-8">
+      {/* Enhanced Welcome Header */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-white via-slate-50/30 to-blue-50/20 border border-slate-200/60 rounded-2xl shadow-lg shadow-slate-200/50">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(59,130,246,0.06),transparent_50%)]"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(147,51,234,0.04),transparent_50%)]"></div>
+        <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-blue-100/30 to-transparent rounded-full -translate-y-20 translate-x-20"></div>
+        <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-purple-100/20 to-transparent rounded-full translate-y-16 -translate-x-16"></div>
         
         <div className="relative p-8">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/20">
-                <Briefcase className="h-8 w-8 text-white" />
+            <div className="flex items-center space-x-6">
+              <div className="relative">
+                <div className="w-20 h-20 bg-gradient-to-br from-blue-600 via-blue-700 to-purple-700 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-600/25 rotate-3 hover:rotate-0 transition-transform duration-300">
+                  <Briefcase className="h-10 w-10 text-white" />
+                </div>
+                <div className="absolute -top-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+                  <Star className="h-3 w-3 text-white" />
+                </div>
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-1">Welcome to Professional Workspace</h1>
-                <p className="text-gray-600">Advanced tools for real estate professionals</p>
-                <div className="flex gap-2 mt-3">
-                  <Badge className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100">
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent mb-2">
+                  Professional Workspace
+                </h1>
+                <p className="text-slate-600 text-lg font-medium">Advanced tools for real estate professionals</p>
+                <div className="flex gap-3 mt-4">
+                  <Badge className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 transition-colors px-3 py-1">
                     <Star className="h-3 w-3 mr-1" />
-                    Premium Tools
+                    Premium Suite
                   </Badge>
-                  <Badge className="bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100">
+                  <Badge className="bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100 transition-colors px-3 py-1">
                     <Sparkles className="h-3 w-3 mr-1" />
-                    AI-Powered
+                    AI-Enhanced
+                  </Badge>
+                  <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 transition-colors px-3 py-1">
+                    <Award className="h-3 w-3 mr-1" />
+                    Certified Tools
                   </Badge>
                 </div>
               </div>
             </div>
             
             <div className="text-right">
-              <div className="text-2xl font-bold text-gray-900">{workspaceStats.monthlyRevenue}</div>
-              <div className="text-sm text-gray-600">Monthly Revenue</div>
-              <div className="flex items-center mt-1 text-green-600 text-sm">
-                <TrendingUp className="h-3 w-3 mr-1" />
-                <span>+12.5% from last month</span>
+              <div className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                {workspaceStats.monthlyRevenue}
+              </div>
+              <div className="text-sm text-slate-600 font-medium">Monthly Revenue</div>
+              <div className="flex items-center justify-end mt-2 text-green-600 text-sm font-medium">
+                <TrendingUp className="h-4 w-4 mr-1" />
+                <span>+12.5% growth</span>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Stats Grid - Light & Professional */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-700">Total CMAs</CardTitle>
-            <div className="p-2 bg-blue-50 rounded-lg border border-blue-100">
-              <FileText className="h-4 w-4 text-blue-600" />
+      {/* Enhanced Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="relative bg-white border border-slate-200/60 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-slate-300/50 transition-all duration-300 group overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative">
+            <CardTitle className="text-sm font-semibold text-slate-700">Total CMAs</CardTitle>
+            <div className="p-3 bg-gradient-to-br from-blue-100 to-blue-50 rounded-xl border border-blue-200/50 shadow-sm">
+              <FileText className="h-5 w-5 text-blue-600" />
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-900">{workspaceStats.totalCMAs}</div>
-            <div className="flex items-center mt-1">
-              <TrendingUp className="h-3 w-3 text-green-600 mr-1" />
-              <p className="text-xs text-green-600 font-medium">+3 from last month</p>
+          <CardContent className="relative">
+            <div className="text-3xl font-bold text-slate-900 mb-1">{workspaceStats.totalCMAs}</div>
+            <div className="flex items-center">
+              <TrendingUp className="h-4 w-4 text-green-600 mr-1" />
+              <p className="text-sm text-green-600 font-medium">+3 this month</p>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-700">Completed Valuations</CardTitle>
-            <div className="p-2 bg-green-50 rounded-lg border border-green-100">
-              <Calculator className="h-4 w-4 text-green-600" />
+        <Card className="relative bg-white border border-slate-200/60 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-slate-300/50 transition-all duration-300 group overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-green-50/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative">
+            <CardTitle className="text-sm font-semibold text-slate-700">Completed Valuations</CardTitle>
+            <div className="p-3 bg-gradient-to-br from-green-100 to-green-50 rounded-xl border border-green-200/50 shadow-sm">
+              <Calculator className="h-5 w-5 text-green-600" />
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-900">{workspaceStats.completedValuations}</div>
-            <div className="flex items-center mt-1">
-              <Target className="h-3 w-3 text-green-600 mr-1" />
-              <p className="text-xs text-green-600 font-medium">{workspaceStats.successRate}% success rate</p>
+          <CardContent className="relative">
+            <div className="text-3xl font-bold text-slate-900 mb-1">{workspaceStats.completedValuations}</div>
+            <div className="flex items-center">
+              <Target className="h-4 w-4 text-green-600 mr-1" />
+              <p className="text-sm text-green-600 font-medium">{workspaceStats.successRate}% success rate</p>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-700">Active Clients</CardTitle>
-            <div className="p-2 bg-purple-50 rounded-lg border border-purple-100">
-              <Users className="h-4 w-4 text-purple-600" />
+        <Card className="relative bg-white border border-slate-200/60 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-slate-300/50 transition-all duration-300 group overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-50/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative">
+            <CardTitle className="text-sm font-semibold text-slate-700">Active Clients</CardTitle>
+            <div className="p-3 bg-gradient-to-br from-purple-100 to-purple-50 rounded-xl border border-purple-200/50 shadow-sm">
+              <Users className="h-5 w-5 text-purple-600" />
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-900">{workspaceStats.activeClients}</div>
-            <div className="flex items-center mt-1">
-              <Users className="h-3 w-3 text-purple-600 mr-1" />
-              <p className="text-xs text-purple-600 font-medium">+1 new this week</p>
+          <CardContent className="relative">
+            <div className="text-3xl font-bold text-slate-900 mb-1">{workspaceStats.activeClients}</div>
+            <div className="flex items-center">
+              <Users className="h-4 w-4 text-purple-600 mr-1" />
+              <p className="text-sm text-purple-600 font-medium">+1 new this week</p>
             </div>
           </CardContent>
         </Card>
         
-        <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-700">Avg. Completion</CardTitle>
-            <div className="p-2 bg-orange-50 rounded-lg border border-orange-100">
-              <Clock className="h-4 w-4 text-orange-600" />
+        <Card className="relative bg-white border border-slate-200/60 shadow-lg shadow-slate-200/50 hover:shadow-xl hover:shadow-slate-300/50 transition-all duration-300 group overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-50/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 relative">
+            <CardTitle className="text-sm font-semibold text-slate-700">Avg. Completion</CardTitle>
+            <div className="p-3 bg-gradient-to-br from-orange-100 to-orange-50 rounded-xl border border-orange-200/50 shadow-sm">
+              <Clock className="h-5 w-5 text-orange-600" />
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-gray-900">{workspaceStats.avgDaysToComplete} days</div>
-            <div className="flex items-center mt-1">
-              <TrendingUp className="h-3 w-3 text-green-600 mr-1" />
-              <p className="text-xs text-green-600 font-medium">15% faster</p>
+          <CardContent className="relative">
+            <div className="text-3xl font-bold text-slate-900 mb-1">{workspaceStats.avgDaysToComplete} days</div>
+            <div className="flex items-center">
+              <TrendingUp className="h-4 w-4 text-green-600 mr-1" />
+              <p className="text-sm text-green-600 font-medium">15% faster</p>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Workspace Tabs */}
-      <Tabs value={activeWorkspace} onValueChange={setActiveWorkspace} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5 bg-white border border-gray-200 rounded-lg p-1 shadow-sm">
-          <TabsTrigger value="overview" className="rounded-md data-[state=active]:bg-gray-100 data-[state=active]:text-gray-900 data-[state=active]:shadow-sm">
+      {/* Enhanced Workspace Tabs */}
+      <Tabs value={activeWorkspace} onValueChange={setActiveWorkspace} className="space-y-8">
+        <TabsList className="grid w-full grid-cols-5 bg-white border border-slate-200/60 rounded-xl p-1 shadow-lg shadow-slate-200/50 backdrop-blur-sm">
+          <TabsTrigger value="overview" className="rounded-lg data-[state=active]:bg-slate-100 data-[state=active]:text-slate-900 data-[state=active]:shadow-md font-medium transition-all duration-200">
             Overview
           </TabsTrigger>
-          <TabsTrigger value="cma" className="rounded-md data-[state=active]:bg-gray-100 data-[state=active]:text-gray-900 data-[state=active]:shadow-sm">
+          <TabsTrigger value="cma" className="rounded-lg data-[state=active]:bg-slate-100 data-[state=active]:text-slate-900 data-[state=active]:shadow-md font-medium transition-all duration-200">
             CMA Tools
           </TabsTrigger>
-          <TabsTrigger value="valuation" className="rounded-md data-[state=active]:bg-gray-100 data-[state=active]:text-gray-900 data-[state=active]:shadow-sm">
+          <TabsTrigger value="valuation" className="rounded-lg data-[state=active]:bg-slate-100 data-[state=active]:text-slate-900 data-[state=active]:shadow-md font-medium transition-all duration-200">
             Valuations
           </TabsTrigger>
-          <TabsTrigger value="market-analysis" className="rounded-md data-[state=active]:bg-gray-100 data-[state=active]:text-gray-900 data-[state=active]:shadow-sm">
+          <TabsTrigger value="market-analysis" className="rounded-lg data-[state=active]:bg-slate-100 data-[state=active]:text-slate-900 data-[state=active]:shadow-md font-medium transition-all duration-200">
             Market Analysis
           </TabsTrigger>
-          <TabsTrigger value="reports" className="rounded-md data-[state=active]:bg-gray-100 data-[state=active]:text-gray-900 data-[state=active]:shadow-sm">
+          <TabsTrigger value="reports" className="rounded-lg data-[state=active]:bg-slate-100 data-[state=active]:text-slate-900 data-[state=active]:shadow-md font-medium transition-all duration-200">
             Reports
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-6">
-          {/* Quick Actions */}
-          <Card className="bg-white border border-gray-200 shadow-sm">
-            <CardHeader className="bg-gray-50/50 border-b border-gray-100">
-              <CardTitle className="text-xl text-gray-900">Quick Actions</CardTitle>
-              <CardDescription className="text-gray-600">Start your professional work with these tools</CardDescription>
+        <TabsContent value="overview" className="space-y-8">
+          {/* Enhanced Quick Actions */}
+          <Card className="bg-white border border-slate-200/60 shadow-lg shadow-slate-200/50">
+            <CardHeader className="bg-gradient-to-r from-slate-50/80 to-blue-50/30 border-b border-slate-200/50">
+              <CardTitle className="text-2xl text-slate-900 font-bold">Quick Actions</CardTitle>
+              <CardDescription className="text-slate-600 text-lg">Start your professional work with these advanced tools</CardDescription>
             </CardHeader>
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <CardContent className="p-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <Button 
-                  className="h-24 flex flex-col items-center justify-center space-y-2 bg-white border-2 border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 shadow-sm hover:shadow-md transition-all duration-200 group"
+                  className="h-32 flex flex-col items-center justify-center space-y-3 bg-white border-2 border-blue-200/60 text-blue-700 hover:bg-blue-50 hover:border-blue-300 shadow-lg hover:shadow-xl transition-all duration-300 group rounded-xl"
                   onClick={() => handleCreateNewWork("CMA")}
                   variant="outline"
                 >
-                  <Calculator className="h-6 w-6 group-hover:scale-110 transition-transform" />
-                  <span className="font-semibold">New CMA</span>
+                  <div className="p-3 bg-blue-100 rounded-xl group-hover:scale-110 transition-transform duration-200">
+                    <Calculator className="h-7 w-7 text-blue-600" />
+                  </div>
+                  <span className="font-semibold text-lg">New CMA</span>
+                  <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </Button>
                 
                 <Button 
-                  className="h-24 flex flex-col items-center justify-center space-y-2 bg-white border-2 border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300 shadow-sm hover:shadow-md transition-all duration-200 group"
+                  className="h-32 flex flex-col items-center justify-center space-y-3 bg-white border-2 border-green-200/60 text-green-700 hover:bg-green-50 hover:border-green-300 shadow-lg hover:shadow-xl transition-all duration-300 group rounded-xl"
                   onClick={() => handleCreateNewWork("Valuation")}
                   variant="outline"
                 >
-                  <TrendingUp className="h-6 w-6 group-hover:scale-110 transition-transform" />
-                  <span className="font-semibold">Property Valuation</span>
+                  <div className="p-3 bg-green-100 rounded-xl group-hover:scale-110 transition-transform duration-200">
+                    <TrendingUp className="h-7 w-7 text-green-600" />
+                  </div>
+                  <span className="font-semibold text-lg">Property Valuation</span>
+                  <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </Button>
                 
                 <Button 
-                  className="h-24 flex flex-col items-center justify-center space-y-2 bg-white border-2 border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300 shadow-sm hover:shadow-md transition-all duration-200 group"
+                  className="h-32 flex flex-col items-center justify-center space-y-3 bg-white border-2 border-purple-200/60 text-purple-700 hover:bg-purple-50 hover:border-purple-300 shadow-lg hover:shadow-xl transition-all duration-300 group rounded-xl"
                   onClick={() => handleCreateNewWork("Market-Analysis")}
                   variant="outline"
                 >
-                  <MapPin className="h-6 w-6 group-hover:scale-110 transition-transform" />
-                  <span className="font-semibold">Market Analysis</span>
+                  <div className="p-3 bg-purple-100 rounded-xl group-hover:scale-110 transition-transform duration-200">
+                    <MapPin className="h-7 w-7 text-purple-600" />
+                  </div>
+                  <span className="font-semibold text-lg">Market Analysis</span>
+                  <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </Button>
                 
                 <Button 
-                  className="h-24 flex flex-col items-center justify-center space-y-2 bg-white border-2 border-orange-200 text-orange-700 hover:bg-orange-50 hover:border-orange-300 shadow-sm hover:shadow-md transition-all duration-200 group"
+                  className="h-32 flex flex-col items-center justify-center space-y-3 bg-white border-2 border-orange-200/60 text-orange-700 hover:bg-orange-50 hover:border-orange-300 shadow-lg hover:shadow-xl transition-all duration-300 group rounded-xl"
                   onClick={() => handleCreateNewWork("Reports")}
                   variant="outline"
                 >
-                  <FileText className="h-6 w-6 group-hover:scale-110 transition-transform" />
-                  <span className="font-semibold">Property Report</span>
+                  <div className="p-3 bg-orange-100 rounded-xl group-hover:scale-110 transition-transform duration-200">
+                    <FileText className="h-7 w-7 text-orange-600" />
+                  </div>
+                  <span className="font-semibold text-lg">Property Report</span>
+                  <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </Button>
               </div>
             </CardContent>
           </Card>
 
-          {/* Recent Work */}
-          <Card className="bg-white border border-gray-200 shadow-sm">
-            <CardHeader className="bg-gray-50/50 border-b border-gray-100">
-              <CardTitle className="text-xl text-gray-900">Recent Work & Projects</CardTitle>
-              <CardDescription className="text-gray-600">Track your latest professional activities</CardDescription>
+          {/* Enhanced Recent Work */}
+          <Card className="bg-white border border-slate-200/60 shadow-lg shadow-slate-200/50">
+            <CardHeader className="bg-gradient-to-r from-slate-50/80 to-purple-50/30 border-b border-slate-200/50">
+              <CardTitle className="text-2xl text-slate-900 font-bold">Recent Work & Projects</CardTitle>
+              <CardDescription className="text-slate-600 text-lg">Track your latest professional activities</CardDescription>
             </CardHeader>
-            <CardContent className="p-6">
-              <div className="space-y-4">
+            <CardContent className="p-8">
+              <div className="space-y-6">
                 {recentWork.map((work) => (
-                  <div key={work.id} className="group hover:bg-gray-50 transition-colors duration-200 p-4 border border-gray-100 rounded-lg shadow-sm hover:shadow-md">
+                  <div key={work.id} className="group hover:bg-slate-50/50 transition-all duration-300 p-6 border border-slate-100 rounded-xl shadow-md hover:shadow-lg">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-purple-100 border border-blue-200 rounded-lg flex items-center justify-center">
-                          {work.type === "CMA" && <Calculator className="h-5 w-5 text-blue-600" />}
-                          {work.type === "Valuation" && <TrendingUp className="h-5 w-5 text-green-600" />}
-                          {work.type === "Market Analysis" && <MapPin className="h-5 w-5 text-purple-600" />}
+                      <div className="flex items-center space-x-6">
+                        <div className="w-14 h-14 bg-gradient-to-br from-slate-100 to-slate-50 border border-slate-200 rounded-xl flex items-center justify-center shadow-sm">
+                          {work.type === "CMA" && <Calculator className="h-6 w-6 text-blue-600" />}
+                          {work.type === "Valuation" && <TrendingUp className="h-6 w-6 text-green-600" />}
+                          {work.type === "Market Analysis" && <MapPin className="h-6 w-6 text-purple-600" />}
                         </div>
                         <div className="flex-1">
-                          <div className="flex items-center space-x-3 mb-1">
-                            <span className="font-semibold text-gray-900">{work.type}</span>
-                            <Badge className={`${getPriorityColor(work.priority)} text-xs`}>
+                          <div className="flex items-center space-x-4 mb-2">
+                            <span className="font-bold text-slate-900 text-lg">{work.type}</span>
+                            <Badge className={`${getPriorityColor(work.priority)} text-sm font-medium`}>
                               {work.priority}
                             </Badge>
                           </div>
-                          <div className="text-gray-700 font-medium text-sm">{work.property}</div>
-                          <div className="text-xs text-gray-500">Client: {work.client} • {work.date}</div>
+                          <div className="text-slate-700 font-semibold text-base mb-1">{work.property}</div>
+                          <div className="text-sm text-slate-500">Client: {work.client} • {work.date}</div>
                           
-                          <div className="mt-2">
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="text-xs text-gray-600">Progress</span>
-                              <span className="text-xs text-gray-600">{work.completion}%</span>
+                          <div className="mt-3">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-sm text-slate-600 font-medium">Progress</span>
+                              <span className="text-sm text-slate-600 font-semibold">{work.completion}%</span>
                             </div>
-                            <Progress value={work.completion} className="h-1.5" />
+                            <Progress value={work.completion} className="h-2 bg-slate-100" />
                           </div>
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="font-bold text-lg text-gray-900 mb-1">{work.value}</div>
+                        <div className="font-bold text-2xl text-slate-900 mb-2">{work.value}</div>
                         <Badge 
                           variant={work.status === "completed" ? "default" : work.status === "in-progress" ? "secondary" : "outline"}
-                          className="text-xs"
+                          className="text-sm font-medium"
                         >
                           {work.status === "completed" && <CheckCircle className="h-3 w-3 mr-1" />}
                           {work.status === "in-progress" && <Clock className="h-3 w-3 mr-1" />}
