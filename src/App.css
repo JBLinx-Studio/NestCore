@@ -20,6 +20,11 @@ html, body {
   padding: 0;
 }
 
+/* Cinematic backdrop gradient */
+.bg-gradient-radial {
+  background: radial-gradient(circle at center, var(--tw-gradient-stops));
+}
+
 .logo {
   height: 6em;
   padding: 1.5em;

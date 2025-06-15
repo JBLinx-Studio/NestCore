@@ -71,7 +71,7 @@ function App() {
       <Router>
         <div className="min-h-screen bg-background relative">
           {/* Main App - always rendered */}
-          <div className={showAuth ? 'blur-sm pointer-events-none' : ''}>
+          <div className={showAuth ? 'blur-md brightness-50 pointer-events-none transition-all duration-500' : 'transition-all duration-500'}>
             <Routes>
               <Route path="/" element={
                 currentUser ? 
@@ -82,9 +82,13 @@ function App() {
             </Routes>
           </div>
           
-          {/* Auth Overlay */}
+          {/* Cinematic Auth Overlay */}
           {showAuth && (
-            <div className="fixed inset-0 z-50 bg-black/20 backdrop-blur-sm">
+            <div className="fixed inset-0 z-50 bg-gradient-to-br from-slate-900/95 via-gray-900/90 to-black/95 backdrop-blur-xl">
+              {/* Additional cinematic overlay effects */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/30"></div>
+              <div className="absolute inset-0 bg-gradient-radial from-transparent via-slate-900/20 to-black/60"></div>
+              
               <GuestAuth onAuthenticated={handleAuthenticated} isOpen={showAuth} />
             </div>
           )}
