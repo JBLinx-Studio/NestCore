@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PropertySearch } from "./PropertySearch";
-import { PropertyIntelligence } from "./PropertyIntelligence";
+import { PropertyIntelligenceEnhanced } from "./PropertyIntelligenceEnhanced";
 import { PropertyLocation } from "@/services/OpenStreetMapService";
 
 export const PropertySearchTab = () => {
@@ -10,9 +10,8 @@ export const PropertySearchTab = () => {
   const [selectedProperty, setSelectedProperty] = useState<PropertyLocation | null>(null);
 
   const handlePropertySelected = (property: PropertyLocation) => {
-    console.log('Property selected for intelligence:', property);
+    console.log('Property selected for enhanced intelligence:', property);
     setSelectedProperty(property);
-    // Automatically switch to intelligence tab when property is selected
     setActiveTab("intelligence");
   };
 
@@ -30,7 +29,7 @@ export const PropertySearchTab = () => {
             value="intelligence" 
             className="text-lg py-3 data-[state=active]:bg-green-500 data-[state=active]:text-white"
           >
-            🧠 Property Intelligence
+            🚀 Enhanced Intelligence
           </TabsTrigger>
         </TabsList>
 
@@ -39,7 +38,7 @@ export const PropertySearchTab = () => {
         </TabsContent>
 
         <TabsContent value="intelligence" className="space-y-6 mt-6">
-          <PropertyIntelligence selectedProperty={selectedProperty} />
+          <PropertyIntelligenceEnhanced selectedProperty={selectedProperty} />
         </TabsContent>
       </Tabs>
     </div>

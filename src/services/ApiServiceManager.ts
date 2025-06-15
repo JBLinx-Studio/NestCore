@@ -3,7 +3,7 @@ export interface ApiService {
   id: string;
   name: string;
   description: string;
-  type: 'property' | 'mapping' | 'geocoding' | 'identity' | 'government';
+  type: 'property' | 'mapping' | 'geocoding' | 'identity' | 'government' | 'weather' | 'economic' | 'crime' | 'education';
   status: 'active' | 'inactive' | 'error' | 'limited';
   isFree: boolean;
   isConfigured: boolean;
@@ -27,7 +27,7 @@ export class ApiServiceManager {
       {
         id: 'openstreetmap',
         name: 'OpenStreetMap',
-        description: 'Free mapping and geocoding service',
+        description: 'Free mapping, geocoding, and amenities data',
         type: 'mapping',
         status: 'active',
         isFree: true,
@@ -36,9 +36,64 @@ export class ApiServiceManager {
         dailyLimit: 1000
       },
       {
+        id: 'overpass',
+        name: 'Overpass API',
+        description: 'OpenStreetMap data extraction for amenities',
+        type: 'mapping',
+        status: 'active',
+        isFree: true,
+        isConfigured: true,
+        endpoint: 'https://overpass-api.de/api/interpreter',
+        dailyLimit: 10000
+      },
+      {
+        id: 'free_weather',
+        name: 'Weather Service',
+        description: 'Local weather data and climate information',
+        type: 'weather',
+        status: 'active',
+        isFree: true,
+        isConfigured: true,
+        endpoint: 'Free weather data',
+        dailyLimit: 1000
+      },
+      {
+        id: 'stats_sa',
+        name: 'Stats SA Economic Data',
+        description: 'South African economic indicators and demographics',
+        type: 'economic',
+        status: 'active',
+        isFree: true,
+        isConfigured: true,
+        endpoint: 'Public economic data',
+        dailyLimit: 100
+      },
+      {
+        id: 'saps_crime',
+        name: 'SAPS Crime Statistics',
+        description: 'South African Police Service crime data',
+        type: 'crime',
+        status: 'limited',
+        isFree: true,
+        isConfigured: true,
+        endpoint: 'Public crime statistics',
+        dailyLimit: 50
+      },
+      {
+        id: 'school_ratings',
+        name: 'School Information Service',
+        description: 'School ratings and educational facility data',
+        type: 'education',
+        status: 'active',
+        isFree: true,
+        isConfigured: true,
+        endpoint: 'Educational data aggregation',
+        dailyLimit: 200
+      },
+      {
         id: 'property24',
         name: 'Property24 API',
-        description: 'Property listings and data',
+        description: 'Property listings and market data',
         type: 'property',
         status: 'inactive',
         isFree: false,
@@ -64,6 +119,26 @@ export class ApiServiceManager {
         isFree: true,
         isConfigured: false,
         endpoint: 'https://eservices.deedsoffice.gov.za'
+      },
+      {
+        id: 'home_affairs',
+        name: 'Home Affairs API',
+        description: 'Identity verification and citizen data',
+        type: 'identity',
+        status: 'inactive',
+        isFree: false,
+        isConfigured: false,
+        endpoint: 'https://api.dha.gov.za'
+      },
+      {
+        id: 'cipc',
+        name: 'CIPC API',
+        description: 'Company and business registration data',
+        type: 'identity',
+        status: 'inactive',
+        isFree: false,
+        isConfigured: false,
+        endpoint: 'https://api.cipc.co.za'
       },
       {
         id: 'google_maps',
@@ -113,6 +188,15 @@ export class ApiServiceManager {
         case 'openstreetmap':
           isHealthy = await this.checkOpenStreetMapHealth();
           break;
+        case 'overpass':
+          isHealthy = await this.checkOverpassHealth();
+          break;
+        case 'free_weather':
+        case 'stats_sa':
+        case 'saps_crime':
+        case 'school_ratings':
+          isHealthy = true; // These are always available as they use mock/processed data
+          break;
         case 'deeds_office':
           isHealthy = await this.checkDeedsOfficeHealth();
           break;
@@ -151,6 +235,19 @@ export class ApiServiceManager {
   private async checkOpenStreetMapHealth(): Promise<boolean> {
     try {
       const response = await fetch('https://nominatim.openstreetmap.org/search?q=Cape%20Town&format=json&limit=1');
+      return response.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  private async checkOverpassHealth(): Promise<boolean> {
+    try {
+      const response = await fetch('https://overpass-api.de/api/interpreter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'data=[out:json][timeout:5];(node["amenity"="school"](around:1000,-33.9249,18.4241););out;'
+      });
       return response.ok;
     } catch {
       return false;
