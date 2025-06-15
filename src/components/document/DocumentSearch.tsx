@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Search, X, Filter } from "lucide-react";
 import { Document } from "./types";
+import { SearchSuggestions } from "./search/SearchSuggestions";
 
 interface DocumentSearchProps {
   documents: Document[];
@@ -86,6 +87,10 @@ export const DocumentSearch = ({
     setShowSuggestions(false);
   }, [onSearchChange, onSearchResults, documents]);
 
+  const removeRecentSearch = useCallback((index: number) => {
+    setRecentSearches(prev => prev.filter((_, i) => i !== index));
+  }, []);
+
   return (
     <div className="relative">
       <div className="relative">
@@ -122,44 +127,12 @@ export const DocumentSearch = ({
 
       {/* Search suggestions dropdown */}
       {showSuggestions && (searchSuggestions.length > 0 || recentSearches.length > 0) && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-md shadow-lg z-50 max-h-64 overflow-y-auto">
-          {searchSuggestions.length > 0 && (
-            <div className="p-2">
-              <div className="text-xs text-gray-500 mb-2">Suggestions</div>
-              {searchSuggestions.map((suggestion, index) => (
-                <button
-                  key={index}
-                  className="w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm"
-                  onClick={() => handleSearch(suggestion)}
-                >
-                  {suggestion}
-                </button>
-              ))}
-            </div>
-          )}
-          
-          {recentSearches.length > 0 && (
-            <div className="p-2 border-t">
-              <div className="text-xs text-gray-500 mb-2">Recent searches</div>
-              {recentSearches.map((search, index) => (
-                <button
-                  key={index}
-                  className="w-full text-left px-2 py-1 hover:bg-gray-100 rounded text-sm flex items-center justify-between"
-                  onClick={() => handleSearch(search)}
-                >
-                  <span>{search}</span>
-                  <X 
-                    className="h-3 w-3 text-gray-400 hover:text-gray-600"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setRecentSearches(prev => prev.filter((_, i) => i !== index));
-                    }}
-                  />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        <SearchSuggestions
+          suggestions={searchSuggestions}
+          recentSearches={recentSearches}
+          onSelectSuggestion={handleSearch}
+          onRemoveRecentSearch={removeRecentSearch}
+        />
       )}
 
       {/* Active search filters */}
