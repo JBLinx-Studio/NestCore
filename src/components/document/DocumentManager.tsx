@@ -10,10 +10,13 @@ import { ConfirmationDialog } from "./ConfirmationDialog";
 import { DocumentAnalytics } from "./DocumentAnalytics";
 import { DocumentFilters } from "./DocumentFilters";
 import { DocumentWorkflow } from "./DocumentWorkflow";
+import { DocumentSearch } from "./DocumentSearch";
+import { DocumentViewer } from "./DocumentViewer";
+import { DocumentExporter } from "./DocumentExporter";
 import { validateFiles, getFileCategory, formatFileSize } from "./fileValidation";
 import { Document } from "./types";
 import { Button } from "@/components/ui/button";
-import { FileText, Upload } from "lucide-react";
+import { FileText, Upload, Eye } from "lucide-react";
 
 interface UploadFile {
   file: File;
@@ -29,6 +32,9 @@ export const DocumentManager = () => {
   const [uploadingFiles, setUploadingFiles] = useState<UploadFile[]>([]);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<number | null>(null);
+  const [viewerDocument, setViewerDocument] = useState<Document | null>(null);
+  const [isViewerOpen, setIsViewerOpen] = useState(false);
+  const [searchResults, setSearchResults] = useState<Document[]>([]);
   const [advancedFilters, setAdvancedFilters] = useState<any>({
     sortBy: 'uploadDate',
     sortOrder: 'desc'
@@ -130,7 +136,7 @@ export const DocumentManager = () => {
   const simulateFileUpload = useCallback((file: File): Promise<void> => {
     return new Promise((resolve, reject) => {
       const uploadTime = Math.random() * 3000 + 1000;
-      const shouldFail = Math.random() < 0.05; // 5% failure rate
+      const shouldFail = Math.random() < 0.05;
       
       const interval = setInterval(() => {
         setUploadingFiles(current => 
@@ -325,9 +331,8 @@ export const DocumentManager = () => {
   }, []);
 
   const handleViewDocument = useCallback((document: Document) => {
-    toast.info(`Opening ${document.name} in viewer`);
-    // In real app, would open document viewer
-    window.open(document.url, '_blank');
+    setViewerDocument(document);
+    setIsViewerOpen(true);
   }, []);
 
   const handleDownloadDocument = useCallback((document: Document) => {
@@ -435,6 +440,8 @@ export const DocumentManager = () => {
 
   const filteredDocuments = applyFilters(documents);
 
+  const displayDocuments = searchResults.length > 0 ? searchResults : documents;
+
   return (
     <DropZone onFilesDropped={handleFilesDropped} className="space-y-6">
       {/* Header */}
@@ -443,11 +450,25 @@ export const DocumentManager = () => {
           <h2 className="text-2xl font-bold text-gray-900">Document Manager</h2>
           <p className="text-gray-600">Organize and manage all your property-related documents</p>
         </div>
-        <DocumentActions onUpload={handleUpload} onCreateFolder={handleCreateFolder} />
+        <div className="flex items-center gap-2">
+          <DocumentExporter 
+            documents={documents} 
+            selectedDocuments={selectedDocumentIds.length > 0 ? documents.filter(d => selectedDocumentIds.includes(d.id)) : undefined}
+          />
+          <DocumentActions onUpload={handleUpload} onCreateFolder={handleCreateFolder} />
+        </div>
       </div>
 
       {/* Document Analytics */}
       <DocumentAnalytics documents={documents} />
+
+      {/* Enhanced Search */}
+      <DocumentSearch
+        documents={documents}
+        onSearchResults={setSearchResults}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+      />
 
       {/* Upload Progress */}
       <FileUploadProgress 
@@ -489,14 +510,14 @@ export const DocumentManager = () => {
 
           {/* Batch Selection */}
           <DocumentBatchSelector
-            documents={filteredDocuments}
+            documents={displayDocuments}
             selectedIds={selectedDocumentIds}
             onSelectionChange={setSelectedDocumentIds}
             onBulkAction={handleBulkAction}
           />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {filteredDocuments.map((doc) => (
+            {displayDocuments.map((doc) => (
               <DocumentCard
                 key={doc.id}
                 doc={doc}
@@ -518,7 +539,7 @@ export const DocumentManager = () => {
           </div>
 
           {/* Empty State */}
-          {filteredDocuments.length === 0 && (
+          {displayDocuments.length === 0 && (
             <div className="text-center py-12">
               <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No documents found</h3>
@@ -526,7 +547,7 @@ export const DocumentManager = () => {
                 {searchTerm ? 'Try adjusting your search terms or filters' : 'Upload your first document to get started'}
               </p>
               <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => {
-                const input = document.createElement('input');
+                const input = globalThis.document.createElement('input');
                 input.type = 'file';
                 input.multiple = true;
                 input.onchange = (e: any) => {
@@ -541,6 +562,15 @@ export const DocumentManager = () => {
           )}
         </div>
       </div>
+
+      {/* Document Viewer */}
+      <DocumentViewer
+        document={viewerDocument}
+        isOpen={isViewerOpen}
+        onClose={() => setIsViewerOpen(false)}
+        onDownload={handleDownloadDocument}
+        onShare={handleShareDocument}
+      />
 
       {/* Confirmation Dialogs */}
       <ConfirmationDialog
