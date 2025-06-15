@@ -1,4 +1,3 @@
-
 export interface CrimeData {
   totalIncidents: number;
   crimeRate: number;
@@ -88,7 +87,45 @@ export interface TransportationData {
   };
 }
 
+import { enhancedPropertyAnalysisService, DetailedPropertyData } from './EnhancedPropertyAnalysisService';
+import { comprehensiveWeatherService, MonthlyWeatherData, AnnualWeatherData, RegionalWeatherData, NaturalDisasterData } from './ComprehensiveWeatherService';
+
 class PropertyIntelligenceService {
+  // Enhanced property details using multiple free APIs
+  async getDetailedPropertyData(lat: number, lon: number, address: string): Promise<DetailedPropertyData> {
+    try {
+      console.log('Fetching detailed property data for:', address);
+      return await enhancedPropertyAnalysisService.getDetailedPropertyData(lat, lon, address);
+    } catch (error) {
+      console.error('Enhanced property data fetch failed:', error);
+      throw error;
+    }
+  }
+
+  // Comprehensive weather analysis
+  async getComprehensiveWeatherData(lat: number, lon: number) {
+    try {
+      console.log('Fetching comprehensive weather data for:', lat, lon);
+      
+      const [monthly, annual, regional, disasters] = await Promise.allSettled([
+        comprehensiveWeatherService.getMonthlyWeatherData(lat, lon),
+        comprehensiveWeatherService.getAnnualWeatherData(lat, lon),
+        comprehensiveWeatherService.getRegionalWeatherData(lat, lon),
+        comprehensiveWeatherService.getNaturalDisasterData(lat, lon)
+      ]);
+
+      return {
+        monthly: monthly.status === 'fulfilled' ? monthly.value : [],
+        annual: annual.status === 'fulfilled' ? annual.value : [],
+        regional: regional.status === 'fulfilled' ? regional.value : null,
+        disasters: disasters.status === 'fulfilled' ? disasters.value : null
+      };
+    } catch (error) {
+      console.error('Comprehensive weather data fetch failed:', error);
+      throw error;
+    }
+  }
+
   // Crime data using free South African Police Service data
   async getCrimeData(lat: number, lon: number): Promise<CrimeData> {
     try {
