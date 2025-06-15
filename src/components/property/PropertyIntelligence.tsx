@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,6 +20,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { openStreetMapService, PropertyLocation } from "@/services/OpenStreetMapService";
+import { PropertyWeather } from "./PropertyWeather";
 
 interface PropertyIntelligenceProps {
   selectedProperty?: PropertyLocation | null;
@@ -347,6 +347,11 @@ export const PropertyIntelligence = ({ selectedProperty }: PropertyIntelligenceP
           </div>
         </CardContent>
       </Card>
+
+      {/* Weather Section */}
+      {selectedProperty && (
+        <PropertyWeather property={selectedProperty} />
+      )}
 
       {/* API Status Dashboard */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

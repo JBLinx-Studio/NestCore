@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   MapPin, 
@@ -10,8 +11,9 @@ import {
   Minimize2,
   Camera,
   Map,
-  Satellite,
-  Layers
+  CloudSun,
+  Layers,
+  AlertTriangle
 } from "lucide-react";
 import { PropertyLocation } from "@/services/OpenStreetMapService";
 
@@ -23,15 +25,75 @@ interface PropertyMapsViewerProps {
 export const PropertyMapsViewer = ({ property, onLocationUpdate }: PropertyMapsViewerProps) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [mapStyle, setMapStyle] = useState<'street' | 'satellite' | 'terrain'>('street');
-  const [showStreetView, setShowStreetView] = useState(false);
+  const [mapboxToken, setMapboxToken] = useState('');
+  const [showTokenInput, setShowTokenInput] = useState(true);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const streetViewRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<any>(null);
 
   useEffect(() => {
-    if (mapContainerRef.current) {
+    if (mapContainerRef.current && mapboxToken) {
+      initializeMapboxMap();
+    } else if (mapContainerRef.current && !mapboxToken) {
       initializeOpenStreetMap();
     }
-  }, [property, mapStyle]);
+  }, [property, mapStyle, mapboxToken]);
+
+  const initializeMapboxMap = async () => {
+    if (!mapContainerRef.current || !mapboxToken) return;
+
+    try {
+      // Dynamic import of mapbox-gl
+      const mapboxgl = await import('mapbox-gl');
+      
+      // Set access token
+      mapboxgl.default.accessToken = mapboxToken;
+
+      // Clear previous map
+      if (mapRef.current) {
+        mapRef.current.remove();
+      }
+      mapContainerRef.current.innerHTML = '';
+
+      // Create new map
+      mapRef.current = new mapboxgl.default.Map({
+        container: mapContainerRef.current,
+        style: getMapboxStyle(mapStyle),
+        center: [property.lon, property.lat],
+        zoom: 16,
+        pitch: 45,
+      });
+
+      // Add navigation controls
+      mapRef.current.addControl(new mapboxgl.default.NavigationControl());
+
+      // Add marker for property
+      new mapboxgl.default.Marker({ color: '#3B82F6' })
+        .setLngLat([property.lon, property.lat])
+        .setPopup(
+          new mapboxgl.default.Popup({ offset: 25 })
+            .setHTML(`<h3>${property.displayName}</h3><p>📍 ${property.lat.toFixed(6)}, ${property.lon.toFixed(6)}</p>`)
+        )
+        .addTo(mapRef.current);
+
+      console.log('Mapbox map initialized successfully');
+      
+    } catch (error) {
+      console.error('Failed to initialize Mapbox map:', error);
+      initializeOpenStreetMap();
+    }
+  };
+
+  const getMapboxStyle = (style: string) => {
+    switch (style) {
+      case 'satellite':
+        return 'mapbox://styles/mapbox/satellite-v9';
+      case 'terrain':
+        return 'mapbox://styles/mapbox/outdoors-v12';
+      default:
+        return 'mapbox://styles/mapbox/streets-v12';
+    }
+  };
 
   const initializeOpenStreetMap = () => {
     if (!mapContainerRef.current) return;
@@ -39,7 +101,7 @@ export const PropertyMapsViewer = ({ property, onLocationUpdate }: PropertyMapsV
     // Clear previous map
     mapContainerRef.current.innerHTML = '';
 
-    // Create OpenStreetMap using Leaflet (free alternative to Mapbox)
+    // Create OpenStreetMap visualization
     const mapDiv = document.createElement('div');
     mapDiv.style.width = '100%';
     mapDiv.style.height = '100%';
@@ -47,7 +109,7 @@ export const PropertyMapsViewer = ({ property, onLocationUpdate }: PropertyMapsV
     mapDiv.style.position = 'relative';
     mapDiv.style.borderRadius = '8px';
     
-    // Create a simple map visualization
+    // Create a map-like visualization
     const mapContent = document.createElement('div');
     mapContent.style.position = 'absolute';
     mapContent.style.top = '50%';
@@ -55,37 +117,45 @@ export const PropertyMapsViewer = ({ property, onLocationUpdate }: PropertyMapsV
     mapContent.style.transform = 'translate(-50%, -50%)';
     mapContent.style.textAlign = 'center';
     mapContent.style.padding = '20px';
-    mapContent.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+    mapContent.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
     mapContent.style.borderRadius = '8px';
-    mapContent.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
+    mapContent.style.boxShadow = '0 4px 20px rgba(0,0,0,0.15)';
+    mapContent.style.border = '2px solid #3B82F6';
 
     mapContent.innerHTML = `
-      <div style="margin-bottom: 10px;">
-        <strong>📍 ${property.displayName}</strong>
+      <div style="margin-bottom: 15px;">
+        <div style="width: 40px; height: 40px; background: #3B82F6; border-radius: 50%; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px;">📍</div>
+        <strong style="color: #1F2937; font-size: 16px;">${property.displayName}</strong>
       </div>
-      <div style="font-size: 12px; color: #666; margin-bottom: 10px;">
-        Coordinates: ${property.lat.toFixed(6)}, ${property.lon.toFixed(6)}
+      <div style="font-size: 12px; color: #6B7280; margin-bottom: 10px;">
+        📍 Coordinates: ${property.lat.toFixed(6)}, ${property.lon.toFixed(6)}
       </div>
-      <div style="font-size: 10px; color: #999;">
-        Full mapping requires Mapbox or Google Maps API integration
+      <div style="font-size: 12px; color: #6B7280; margin-bottom: 10px;">
+        🏛️ ${property.municipality || 'Municipality not specified'}
+      </div>
+      <div style="font-size: 12px; color: #6B7280; margin-bottom: 15px;">
+        📮 ${property.postalCode || 'Postal code not specified'}
+      </div>
+      <div style="font-size: 10px; color: #9CA3AF; padding: 8px; background: #F3F4F6; border-radius: 4px;">
+        💡 For interactive mapping, add your Mapbox token above
       </div>
     `;
 
-    // Add grid pattern to simulate map
-    const grid = document.createElement('div');
-    grid.style.position = 'absolute';
-    grid.style.top = '0';
-    grid.style.left = '0';
-    grid.style.width = '100%';
-    grid.style.height = '100%';
-    grid.style.backgroundImage = `
-      linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px)
+    // Add street pattern background
+    const streetPattern = document.createElement('div');
+    streetPattern.style.position = 'absolute';
+    streetPattern.style.top = '0';
+    streetPattern.style.left = '0';
+    streetPattern.style.width = '100%';
+    streetPattern.style.height = '100%';
+    streetPattern.style.backgroundImage = `
+      linear-gradient(rgba(59, 130, 246, 0.1) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59, 130, 246, 0.1) 1px, transparent 1px)
     `;
-    grid.style.backgroundSize = '50px 50px';
-    grid.style.opacity = '0.3';
+    streetPattern.style.backgroundSize = '40px 40px';
+    streetPattern.style.opacity = '0.5';
 
-    mapDiv.appendChild(grid);
+    mapDiv.appendChild(streetPattern);
     mapDiv.appendChild(mapContent);
     mapContainerRef.current.appendChild(mapDiv);
   };
@@ -98,32 +168,50 @@ export const PropertyMapsViewer = ({ property, onLocationUpdate }: PropertyMapsV
     const streetViewDiv = document.createElement('div');
     streetViewDiv.style.width = '100%';
     streetViewDiv.style.height = '400px';
-    streetViewDiv.style.background = 'linear-gradient(180deg, #87CEEB 0%, #98FB98 100%)';
+    streetViewDiv.style.background = 'linear-gradient(180deg, #87CEEB 0%, #98FB98 50%, #F0E68C 100%)';
     streetViewDiv.style.position = 'relative';
     streetViewDiv.style.borderRadius = '8px';
     streetViewDiv.style.display = 'flex';
     streetViewDiv.style.alignItems = 'center';
     streetViewDiv.style.justifyContent = 'center';
+    streetViewDiv.style.overflow = 'hidden';
+
+    // Add realistic street view simulation
+    const buildings = document.createElement('div');
+    buildings.style.position = 'absolute';
+    buildings.style.bottom = '0';
+    buildings.style.left = '0';
+    buildings.style.right = '0';
+    buildings.style.height = '60%';
+    buildings.style.background = 'linear-gradient(to right, #8B4513 0%, #8B4513 20%, #A0522D 20%, #A0522D 40%, #CD853F 40%, #CD853F 60%, #D2691E 60%, #D2691E 80%, #8B4513 80%)';
+    buildings.style.clipPath = 'polygon(0 100%, 20% 50%, 40% 80%, 60% 30%, 80% 70%, 100% 40%, 100% 100%)';
 
     const streetViewContent = document.createElement('div');
     streetViewContent.style.textAlign = 'center';
     streetViewContent.style.padding = '20px';
     streetViewContent.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
     streetViewContent.style.borderRadius = '8px';
-    streetViewContent.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
+    streetViewContent.style.boxShadow = '0 4px 20px rgba(0,0,0,0.15)';
+    streetViewContent.style.zIndex = '10';
+    streetViewContent.style.position = 'relative';
 
     streetViewContent.innerHTML = `
       <div style="margin-bottom: 10px;">
-        <strong>🏠 Street View Simulation</strong>
+        <div style="width: 50px; height: 50px; background: #10B981; border-radius: 50%; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px;">🏠</div>
+        <strong style="color: #1F2937;">Street View Simulation</strong>
       </div>
-      <div style="font-size: 12px; color: #666; margin-bottom: 10px;">
+      <div style="font-size: 12px; color: #6B7280; margin-bottom: 10px;">
         ${property.displayName}
       </div>
-      <div style="font-size: 10px; color: #999;">
-        Live street view requires Google Street View API integration
+      <div style="font-size: 12px; color: #6B7280; margin-bottom: 15px;">
+        📍 ${property.lat.toFixed(4)}, ${property.lon.toFixed(4)}
+      </div>
+      <div style="font-size: 10px; color: #9CA3AF; padding: 8px; background: #F3F4F6; border-radius: 4px;">
+        💡 Live street view requires Google Street View API integration
       </div>
     `;
 
+    streetViewDiv.appendChild(buildings);
     streetViewDiv.appendChild(streetViewContent);
     streetViewRef.current.appendChild(streetViewDiv);
   };
@@ -166,6 +254,39 @@ export const PropertyMapsViewer = ({ property, onLocationUpdate }: PropertyMapsV
           </CardTitle>
         </CardHeader>
         <CardContent>
+          {/* Mapbox Token Input */}
+          {showTokenInput && (
+            <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-start space-x-3">
+                <AlertTriangle className="h-5 w-5 text-blue-600 mt-0.5" />
+                <div className="flex-1">
+                  <h3 className="font-medium text-blue-900 mb-2">Enable Interactive Maps</h3>
+                  <p className="text-sm text-blue-800 mb-3">
+                    Add your Mapbox public token for interactive maps, satellite imagery, and street view integration.
+                  </p>
+                  <div className="flex space-x-2">
+                    <Input
+                      placeholder="pk.eyJ1IjoieW91ci11c2VybmFtZSIsImEiOiJjbGUuLi4"
+                      value={mapboxToken}
+                      onChange={(e) => setMapboxToken(e.target.value)}
+                      className="flex-1"
+                    />
+                    <Button 
+                      onClick={() => setShowTokenInput(false)}
+                      disabled={!mapboxToken}
+                      size="sm"
+                    >
+                      Apply
+                    </Button>
+                  </div>
+                  <p className="text-xs text-blue-600 mt-2">
+                    Get your free token at <a href="https://mapbox.com" target="_blank" rel="noopener noreferrer" className="underline">mapbox.com</a>
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <Tabs defaultValue="map" className="space-y-4">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="map">Interactive Map</TabsTrigger>
@@ -189,7 +310,7 @@ export const PropertyMapsViewer = ({ property, onLocationUpdate }: PropertyMapsV
                     size="sm"
                     onClick={() => setMapStyle('satellite')}
                   >
-                    <Satellite className="h-4 w-4 mr-1" />
+                    <CloudSun className="h-4 w-4 mr-1" />
                     Satellite
                   </Button>
                   <Button
@@ -202,6 +323,15 @@ export const PropertyMapsViewer = ({ property, onLocationUpdate }: PropertyMapsV
                   </Button>
                 </div>
                 <div className="flex items-center space-x-2">
+                  {!showTokenInput && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => setShowTokenInput(true)}
+                    >
+                      ⚙️ Settings
+                    </Button>
+                  )}
                   <Button variant="outline" size="sm" onClick={openInOpenStreetMap}>
                     Open in OSM
                   </Button>
@@ -275,7 +405,7 @@ export const PropertyMapsViewer = ({ property, onLocationUpdate }: PropertyMapsV
             <TabsContent value="satellite" className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <Satellite className="h-5 w-5 text-purple-600" />
+                  <CloudSun className="h-5 w-5 text-purple-600" />
                   <span className="font-medium">Satellite Imagery</span>
                 </div>
                 <Button
@@ -292,7 +422,7 @@ export const PropertyMapsViewer = ({ property, onLocationUpdate }: PropertyMapsV
 
               <div className={`bg-gradient-to-br from-green-100 to-blue-100 rounded-lg border ${isFullscreen ? 'h-[calc(100vh-200px)]' : 'h-96'} flex items-center justify-center`}>
                 <div className="text-center p-6 bg-white/90 rounded-lg shadow-lg">
-                  <Satellite className="h-12 w-12 text-purple-600 mx-auto mb-3" />
+                  <CloudSun className="h-12 w-12 text-purple-600 mx-auto mb-3" />
                   <h3 className="font-semibold text-lg mb-2">Satellite View Placeholder</h3>
                   <p className="text-sm text-gray-600 mb-3">
                     {property.displayName}
