@@ -75,9 +75,13 @@ export const PropertySearch = ({ onPropertySelected }: PropertySearchProps) => {
   };
 
   const handleViewIntelligence = (result: SearchResult) => {
+    console.log('Triggering intelligence view for:', result.location);
     if (onPropertySelected) {
       onPropertySelected(result.location);
-      toast.success("Property selected for intelligence analysis");
+      toast.success("🧠 Property loaded for intelligence analysis!");
+    } else {
+      console.error('onPropertySelected callback not available');
+      toast.error("Unable to load property intelligence");
     }
   };
 
@@ -129,9 +133,9 @@ export const PropertySearch = ({ onPropertySelected }: PropertySearchProps) => {
             <div className="flex items-center space-x-2">
               <CheckCircle className="h-5 w-5 text-green-600" />
               <span className="font-medium text-green-800">OpenStreetMap API</span>
-              <Badge className="bg-green-100 text-green-800">Active & Free</Badge>
+              <Badge className="bg-green-100 text-green-800">✅ Active & Free</Badge>
             </div>
-            <span className="text-sm text-green-600">Real location data available</span>
+            <span className="text-sm text-green-600">🌍 Real location data available</span>
           </div>
         </CardContent>
       </Card>
@@ -148,7 +152,7 @@ export const PropertySearch = ({ onPropertySelected }: PropertySearchProps) => {
           {isSearching && (
             <Card className="p-8 text-center">
               <Loader2 className="h-12 w-12 text-blue-500 mx-auto mb-4 animate-spin" />
-              <p className="text-gray-600">Searching OpenStreetMap...</p>
+              <p className="text-gray-600">🔍 Searching OpenStreetMap...</p>
             </Card>
           )}
 
@@ -175,15 +179,14 @@ export const PropertySearch = ({ onPropertySelected }: PropertySearchProps) => {
                       <span className="font-semibold">Real Location</span>
                       <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
                         <MapPin className="h-3 w-3 mr-1" />
-                        Verified
+                        ✅ Verified
                       </Badge>
                     </div>
                     
                     <p className="text-sm text-gray-600 mb-2 line-clamp-2">{result.location.displayName}</p>
                     
                     <div className="flex items-center space-x-4 text-sm text-gray-500 mb-3">
-                      <span>Lat: {result.location.lat.toFixed(6)}</span>
-                      <span>Lon: {result.location.lon.toFixed(6)}</span>
+                      <span>📍 {result.location.lat.toFixed(6)}, {result.location.lon.toFixed(6)}</span>
                     </div>
 
                     {result.location.municipality && (
@@ -214,7 +217,7 @@ export const PropertySearch = ({ onPropertySelected }: PropertySearchProps) => {
                       className="bg-green-600 hover:bg-green-700"
                     >
                       <Eye className="h-3 w-3 mr-1" />
-                      View Intelligence
+                      🧠 View Intelligence
                     </Button>
                   </div>
                 </div>
@@ -242,7 +245,7 @@ export const PropertySearch = ({ onPropertySelected }: PropertySearchProps) => {
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center space-x-2 text-lg">
                     <CheckCircle className="h-5 w-5 text-green-600" />
-                    <span>Verified Location Data</span>
+                    <span>✅ Verified Location Data</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -289,31 +292,32 @@ export const PropertySearch = ({ onPropertySelected }: PropertySearchProps) => {
                       className="w-full bg-green-600 hover:bg-green-700"
                     >
                       <Eye className="h-4 w-4 mr-2" />
-                      View Property Intelligence
+                      🧠 View Property Intelligence
                     </Button>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Property Data Availability Notice */}
+              {/* Property Intelligence Preview */}
               <Card className="border-blue-200 bg-blue-50">
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center space-x-2 text-lg text-blue-800">
                     <Info className="h-5 w-5" />
-                    <span>Property Intelligence Available</span>
+                    <span>🧠 Property Intelligence Ready</span>
                   </CardTitle>
                   <CardDescription className="text-blue-700">
-                    Click "View Property Intelligence" to see detailed property analysis
+                    Click "View Property Intelligence" for comprehensive analysis
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="text-sm text-blue-800">
-                    <p className="font-medium mb-2">Available with current data:</p>
+                    <p className="font-medium mb-2">📊 Available Analysis:</p>
                     <ul className="list-disc list-inside space-y-1">
-                      <li>Location-based value estimation</li>
-                      <li>Property type classification</li>
-                      <li>Municipality and province data</li>
-                      <li>Basic zoning estimation</li>
+                      <li>🏠 Property type & specifications</li>
+                      <li>💰 Market value estimation</li>
+                      <li>🏛️ Municipal information</li>
+                      <li>⚖️ Legal & zoning details</li>
+                      <li>📈 Investment grade analysis</li>
                     </ul>
                   </div>
                 </CardContent>
@@ -333,7 +337,7 @@ export const PropertySearch = ({ onPropertySelected }: PropertySearchProps) => {
                       <CheckCircle className="h-4 w-4 text-green-600" />
                       <span className="text-sm font-medium">OpenStreetMap Geocoding</span>
                     </div>
-                    <Badge className="bg-green-100 text-green-800">Active</Badge>
+                    <Badge className="bg-green-100 text-green-800">✅ Active</Badge>
                   </div>
                   
                   <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
@@ -341,7 +345,7 @@ export const PropertySearch = ({ onPropertySelected }: PropertySearchProps) => {
                       <XCircle className="h-4 w-4 text-gray-400" />
                       <span className="text-sm font-medium">Property Ownership APIs</span>
                     </div>
-                    <Badge variant="secondary">Setup Required</Badge>
+                    <Badge variant="secondary">🔧 Setup Required</Badge>
                   </div>
                   
                   <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
@@ -349,7 +353,7 @@ export const PropertySearch = ({ onPropertySelected }: PropertySearchProps) => {
                       <XCircle className="h-4 w-4 text-gray-400" />
                       <span className="text-sm font-medium">Property Valuation APIs</span>
                     </div>
-                    <Badge variant="secondary">Setup Required</Badge>
+                    <Badge variant="secondary">🔧 Setup Required</Badge>
                   </div>
                 </CardContent>
               </Card>

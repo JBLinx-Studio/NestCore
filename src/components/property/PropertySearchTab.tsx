@@ -10,6 +10,7 @@ export const PropertySearchTab = () => {
   const [selectedProperty, setSelectedProperty] = useState<PropertyLocation | null>(null);
 
   const handlePropertySelected = (property: PropertyLocation) => {
+    console.log('Property selected for intelligence:', property);
     setSelectedProperty(property);
     // Automatically switch to intelligence tab when property is selected
     setActiveTab("intelligence");
@@ -23,13 +24,13 @@ export const PropertySearchTab = () => {
             value="location" 
             className="text-lg py-3 data-[state=active]:bg-blue-500 data-[state=active]:text-white"
           >
-            Location Search
+            🔍 Location Search
           </TabsTrigger>
           <TabsTrigger 
             value="intelligence" 
             className="text-lg py-3 data-[state=active]:bg-green-500 data-[state=active]:text-white"
           >
-            Property Intelligence
+            🧠 Property Intelligence
           </TabsTrigger>
         </TabsList>
 
