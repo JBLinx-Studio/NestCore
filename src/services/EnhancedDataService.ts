@@ -1,6 +1,8 @@
-
 import { PropertyLocation } from './OpenStreetMapService';
 import { freeDataService } from './FreeDataService';
+import { realWeatherService } from './RealWeatherService';
+import { propertyApisService } from './PropertyApisService';
+import { idContactService } from './IdContactService';
 
 export interface TransportData {
   nearbyStations: Array<{
@@ -334,7 +336,9 @@ export class EnhancedDataService {
       economic,
       crime,
       schools,
-      propertyTax
+      propertyTax,
+      propertyApis,
+      idContactApis
     ] = await Promise.all([
       this.getTransportData(property.lat, property.lon),
       this.getUtilitiesData(property.municipality || ''),
@@ -342,11 +346,13 @@ export class EnhancedDataService {
       this.getDemographicsData(property.municipality || ''),
       this.getEnvironmentalData(property.lat, property.lon),
       this.getPropertySpecificData(property),
-      freeDataService.getWeatherData(property.lat, property.lon),
+      realWeatherService.getWeatherData(property.lat, property.lon),
       freeDataService.getEconomicIndicators(property.province || ''),
       freeDataService.getCrimeStatistics(property.municipality || ''),
       freeDataService.getSchoolRatings(property.lat, property.lon),
-      freeDataService.getPropertyTaxInfo(1500000, property.municipality || '')
+      freeDataService.getPropertyTaxInfo(1500000, property.municipality || ''),
+      propertyApisService.checkApiStatus(),
+      idContactService.checkApiStatus()
     ]);
 
     return {
@@ -360,7 +366,9 @@ export class EnhancedDataService {
       economic,
       crime,
       schools,
-      propertyTax
+      propertyTax,
+      propertyApis,
+      idContactApis
     };
   }
 }

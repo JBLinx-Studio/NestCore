@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -125,13 +124,16 @@ export const PropertyIntelligenceEnhanced = ({ selectedProperty }: PropertyIntel
               <Badge className="bg-orange-100 text-orange-800">
                 🚗 Transport Hub
               </Badge>
+              <Badge className="bg-red-100 text-red-800">
+                🆔 ID Verification Ready
+              </Badge>
             </div>
           </div>
         </CardHeader>
       </Card>
 
-      {/* API Status Dashboard */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Enhanced API Status Dashboard */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="border-green-200 bg-green-50">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -150,11 +152,13 @@ export const PropertyIntelligenceEnhanced = ({ selectedProperty }: PropertyIntel
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <CheckCircle className="h-5 w-5 text-green-600" />
-                <span className="font-medium text-green-800">Free Data APIs</span>
+                <span className="font-medium text-green-800">Weather APIs</span>
               </div>
-              <Badge className="bg-green-100 text-green-800">✅ Active</Badge>
+              <Badge className="bg-green-100 text-green-800">✅ Enhanced</Badge>
             </div>
-            <p className="text-xs text-green-700 mt-1">Weather, Stats SA, Schools</p>
+            <p className="text-xs text-green-700 mt-1">
+              {enhancedData.weather?.source || 'Multiple weather sources'}
+            </p>
           </CardContent>
         </Card>
         
@@ -559,12 +563,27 @@ export const PropertyIntelligenceEnhanced = ({ selectedProperty }: PropertyIntel
               <CardContent className="space-y-4">
                 {enhancedData.weather && (
                   <div className="bg-orange-50 p-3 rounded-lg">
-                    <p className="text-sm font-medium text-orange-800 mb-2">🌤️ Current Weather</p>
+                    <p className="text-sm font-medium text-orange-800 mb-2">🌤️ Live Weather Data</p>
                     <div className="space-y-1 text-sm text-orange-700">
                       <div>Temperature: {enhancedData.weather.temperature}°C</div>
                       <div>Condition: {enhancedData.weather.condition}</div>
                       <div>Humidity: {enhancedData.weather.humidity}%</div>
+                      {enhancedData.weather.windSpeed && (
+                        <div>Wind: {enhancedData.weather.windSpeed} km/h</div>
+                      )}
+                      {enhancedData.weather.pressure && (
+                        <div>Pressure: {enhancedData.weather.pressure} hPa</div>
+                      )}
+                      {enhancedData.weather.sunrise && (
+                        <div>Sunrise: {enhancedData.weather.sunrise}</div>
+                      )}
+                      {enhancedData.weather.sunset && (
+                        <div>Sunset: {enhancedData.weather.sunset}</div>
+                      )}
                     </div>
+                    <p className="text-xs text-orange-600 mt-2">
+                      Source: {enhancedData.weather.source}
+                    </p>
                   </div>
                 )}
               </CardContent>
@@ -578,33 +597,46 @@ export const PropertyIntelligenceEnhanced = ({ selectedProperty }: PropertyIntel
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Phone className="h-5 w-5 text-red-600" />
-                  <span>Property Owner Information</span>
+                  <span>Property Owner & Contact APIs</span>
                   <Badge className="bg-red-100 text-red-800 ml-auto">🔧 API Setup Needed</Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="bg-red-50 p-4 rounded-lg border border-red-200">
-                  <p className="text-red-800 font-medium mb-2">⚠️ Owner Contact Information Not Available</p>
-                  <p className="text-sm text-red-700 mb-3">
-                    To access property owner details and contact information, connect these APIs:
-                  </p>
+                  <p className="text-red-800 font-medium mb-2">🏛️ Property Ownership APIs</p>
                   <ul className="list-disc list-inside text-sm text-red-700 space-y-1">
-                    <li><strong>SA Deeds Office API:</strong> Official ownership records</li>
-                    <li><strong>Home Affairs API:</strong> ID verification & personal details</li>
-                    <li><strong>CIPC API:</strong> Company registration details</li>
-                    <li><strong>Credit Bureau APIs:</strong> Contact information verification</li>
+                    <li><strong>SA Deeds Office API:</strong> Official ownership records, title deeds</li>
+                    <li><strong>Property24 API:</strong> Market prices, property details, photos</li>
+                    <li><strong>Lightstone API:</strong> Property valuations, market analytics</li>
+                    <li><strong>SGT API:</strong> ERF numbers, survey data, boundaries</li>
                   </ul>
                 </div>
                 
                 <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                  <p className="text-blue-800 font-medium mb-2">📋 Available Once Connected:</p>
+                  <p className="text-blue-800 font-medium mb-2">🆔 ID Verification & Contact APIs</p>
                   <ul className="list-disc list-inside text-sm text-blue-700 space-y-1">
-                    <li>Property owner full name & ID number</li>
-                    <li>Registered contact numbers</li>
-                    <li>Email addresses (if available)</li>
-                    <li>Physical addresses</li>
+                    <li><strong>Home Affairs API:</strong> ID verification, personal details</li>
+                    <li><strong>CIPC API:</strong> Company registration, directors</li>
+                    <li><strong>Credit Bureau APIs:</strong> Contact verification, credit checks</li>
+                    <li><strong>Phone Lookup APIs:</strong> TrueCaller, Tellows for number owner</li>
+                    <li><strong>Email Discovery:</strong> Hunter.io, RocketReach for emails</li>
+                    <li><strong>Social Media APIs:</strong> LinkedIn, Facebook profile discovery</li>
+                  </ul>
+                </div>
+
+                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                  <p className="text-green-800 font-medium mb-2">✅ Data Available Once Connected:</p>
+                  <ul className="list-disc list-inside text-sm text-green-700 space-y-1">
+                    <li>Property owner full name, ID number, citizenship</li>
+                    <li>Current and previous ownership history</li>
+                    <li>Contact numbers, email addresses</li>
+                    <li>Physical and postal addresses</li>
+                    <li>Employment information</li>
                     <li>Company directors (for corporate ownership)</li>
-                    <li>Trust beneficiaries (for trust ownership)</li>
+                    <li>Credit score and payment history</li>
+                    <li>Social media profiles</li>
+                    <li>Property valuation and market analysis</li>
+                    <li>Legal status, bonds, restrictions</li>
                   </ul>
                 </div>
               </CardContent>
@@ -614,31 +646,40 @@ export const PropertyIntelligenceEnhanced = ({ selectedProperty }: PropertyIntel
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Users className="h-5 w-5 text-orange-600" />
-                  <span>Professional Services</span>
+                  <span>Professional Services Network</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="bg-orange-50 p-4 rounded-lg">
-                  <p className="text-orange-800 font-medium mb-2">🏢 Local Real Estate Professionals</p>
-                  <p className="text-sm text-orange-700 mb-2">
-                    Connect property industry APIs to access:
-                  </p>
+                  <p className="text-orange-800 font-medium mb-2">🏢 Real Estate Professionals</p>
                   <ul className="list-disc list-inside text-sm text-orange-700 space-y-1">
-                    <li>Local estate agents contact details</li>
-                    <li>Property attorneys in the area</li>
-                    <li>Valuation specialists</li>
-                    <li>Property managers</li>
-                    <li>Municipal officials</li>
+                    <li>Local estate agents with area expertise</li>
+                    <li>Property attorneys and conveyancers</li>
+                    <li>Professional valuers and appraisers</li>
+                    <li>Property managers and rental agents</li>
+                    <li>Municipal officials and contacts</li>
+                    <li>Building inspectors and surveyors</li>
                   </ul>
                 </div>
                 
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-gray-800 font-medium mb-2">🔧 Required API Integrations:</p>
-                  <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
+                <div className="bg-purple-50 p-4 rounded-lg">
+                  <p className="text-purple-800 font-medium mb-2">💼 Service Provider APIs</p>
+                  <ul className="list-disc list-inside text-sm text-purple-700 space-y-1">
                     <li>Property24 Professional Network</li>
                     <li>Law Society of South Africa</li>
                     <li>Estate Agency Affairs Board</li>
-                    <li>South African Institute of Valuers</li>
+                    <li>SA Institute of Valuers</li>
+                    <li>Property Practitioners Regulatory Authority</li>
+                  </ul>
+                </div>
+
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <p className="text-gray-800 font-medium mb-2">🔧 Setup Required For:</p>
+                  <ul className="list-disc list-inside text-sm text-gray-700 space-y-1">
+                    <li>Professional contact databases</li>
+                    <li>Regulatory body member lists</li>
+                    <li>Service provider ratings and reviews</li>
+                    <li>Direct contact information</li>
                   </ul>
                 </div>
               </CardContent>
